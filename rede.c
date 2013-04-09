@@ -38,7 +38,7 @@ void *iniciarRede() {
 
 void *enviarDatagramas() {
 
-    char charopt[128];
+    char dados_aux[128];
 
     while (1) {
 
@@ -53,39 +53,43 @@ void *enviarDatagramas() {
         //Trava acesso exclusivo
         pthread_mutex_lock(&mutex_env3);
 
-        if (shm_env.tam_buffer != 0) {
+        if (buffer_rede_enlace_env.tam_buffer != 0) {
 
-            printf("Rede.c (Enviar - Retorno) = > Type: '%d', Num nó: '%d', Data: '%s', Tamanho : '%d'\n", shm_env.type, shm_env.env_no, shm_env.buffer, shm_env.tam_buffer);
+            printf("Rede.c (Enviar - Retorno) = > Type: '%d', Num nó: '%d', Data: '%s', Tamanho : '%d'\n", buffer_rede_enlace_env.type, buffer_rede_enlace_env.env_no, buffer_rede_enlace_env.buffer, buffer_rede_enlace_env.tam_buffer);
 
             //Testa o retorno da camada de enlace
-            if (shm_env.erro == 0) {
+            if (buffer_rede_enlace_env.retorno == 0) {
                 printf("Rede.c (Enviar - Retorno) = > OK\n\n");
-            } else if (shm_env.erro == -1) {
-                printf("Rede.c (Enviar - Retorno) = > Não há ligacao do nó: '%d'!\n\n", shm_env.env_no);
-            } else if (shm_env.erro > 0) {
-                printf("Rede.c (Enviar - Retorno) = > MTU excedido dividir o pacote no MAX em '%d' bytes\n\n", shm_env.erro);
+            } else if (buffer_rede_enlace_env.retorno == -1) {
+                printf("Rede.c (Enviar - Retorno) = > Não há ligacao do nó: '%d'!\n\n", buffer_rede_enlace_env.env_no);
+            } else if (buffer_rede_enlace_env.retorno > 0) {
+                printf("Rede.c (Enviar - Retorno) = > MTU excedido dividir o pacote no MAX em '%d' bytes\n\n", buffer_rede_enlace_env.retorno);
             } else
                 printf("Rede.c (Enviar - Retorno) = > Erro desconhecido\n\n");
 
             //Reseta os valores
-            shm_env.tam_buffer = 0;
-            shm_env.env_no = 0;
-            strcpy(shm_env.buffer, "");
-            shm_env.erro = 0;
+            buffer_rede_enlace_env.tam_buffer = 0;
+            buffer_rede_enlace_env.env_no = 0;
+            strcpy(buffer_rede_enlace_env.buffer, "");
+            buffer_rede_enlace_env.retorno = 0;
 
         }
 
         //Pega os Dados digitado pelo usuario
         printf("Rede.c (Enviar) = > Digite o Conteudo de data: ");
-        fgets(charopt, 127, stdin);
-        charopt[strlen(charopt) - 1] = '\0';
+        fgets(dados_aux, 127, stdin);
+        dados_aux[strlen(dados_aux) - 1] = '\0';
 
-        strcpy(shm_env.buffer, charopt);
+        strcpy(datagrama_env.buffer, dados_aux);
 
         //Seta tipo de msg, tamanho da msg e nó para enviar
-        shm_env.type = 2;
-        shm_env.tam_buffer = strlen(shm_env.buffer);
-        shm_env.env_no = 2;
+        datagrama_env.type = 2;
+        datagrama_env.tam_buffer = strlen(buffer_rede_enlace_env.buffer);
+
+        //Colocar no Buffer
+        buffer_rede_enlace_env.env_no = 2;
+        buffer_rede_enlace_env.tam_buffer = datagrama_env.tam_buffer;
+        memcpy(&buffer_rede_enlace_env.datagrama, &datagrama_env, sizeof(datagrama_env));
 
         //Destrava acesso exclusivo
         pthread_mutex_unlock(&mutex_env3);
@@ -106,12 +110,19 @@ void *receberDatagramas() {
         //Trava acesso exclusivo
         pthread_mutex_lock(&mutex_rcv3);
 
-        if (shm_rcv.tam_buffer != 0) {
+        if (buffer_rede_enlace_rcv.tam_buffer != 0) {
 
-        printf("Rede.c (Receber) = > Type: '%d', Tam_buffer: '%d' Bytes, Buffer: '%s'\n", shm_rcv.type, shm_rcv.tam_buffer,
-                shm_rcv.buffer);
+            if (buffer_rede_enlace_rcv.retorno = 0)
+            {
+                montarDatagrama(&datagrama_rcv);
+                
+                printf("Rede.c (Receber) = > Type: '%d', Tam_buffer: '%d' Bytes, Buffer: '%s'\n", datagrama_rcv.type, datagrama_rcv.tam_buffer,
+                datagrama_rcv.buffer);
+            }
 
-        shm_rcv.erro = -1;
+            else{
+                printf("Rede.c (Receber) = > ERRO: Datagrama descartado!\n");
+            }
 
         }
         //Libera acesso exclusivo
@@ -120,4 +131,10 @@ void *receberDatagramas() {
         //Destrava mutex de sinconismo
         pthread_mutex_unlock(&mutex_rcv1);
     }
+}
+
+void montarDatagrama(struct datagrama *datagram){
+
+    memcpy(datagram, &buffer_rede_enlace_rcv.datagrama, sizeof (buffer_rede_enlace_rcv.datagrama));
+
 }

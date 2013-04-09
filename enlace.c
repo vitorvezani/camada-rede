@@ -66,7 +66,7 @@ void *enviarFrames(void *param) {
 
     int i, j;
 
-    //Variavel para setar no fim das iteracoes a variavel shm_env.erro(returno)
+    //Variavel para setar no fim das iteracoes a variavel buffer_rede_enlace_env.retorno
     int flag;
 
 #ifdef DEBBUG_ENLACE
@@ -93,7 +93,7 @@ void *enviarFrames(void *param) {
         //Loop no ligacao enlaces
         for (i = 0; i < 18; ++i) {
             //Verificar se existe ligacao entre seu nó e o nó destino
-            if ((ligacao.enlaces[i][0] == file_info.num_no) && (shm_env.env_no == ligacao.enlaces[i][1])) {
+            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])) {
 #ifdef DEBBUG_ENLACE
                 printf("Enlace.c = > Existe Ligacao nos [Enlaces]\n");
 #endif
@@ -106,7 +106,7 @@ void *enviarFrames(void *param) {
                     atoi_result = atoi(ligacao.nos[i][0]);
 
                     //Verificar o IP e Porta do nó destino
-                    if (atoi_result == shm_env.env_no) {
+                    if (atoi_result == buffer_rede_enlace_env.env_no) {
                         //Cria o socket
                         if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
                             perror("socket()");
@@ -114,7 +114,7 @@ void *enviarFrames(void *param) {
                         }
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > Existe -> [Nó]: '%d',possui IP: '%s' , Porta: '%d'\n", shm_env.env_no, ligacao.nos[i][1], atoi(ligacao.nos[i][2]));
+                        printf("Enlace.c = > Existe -> [Nó]: '%d',possui IP: '%s' , Porta: '%d'\n", buffer_rede_enlace_env.env_no, ligacao.nos[i][1], atoi(ligacao.nos[i][2]));
 #endif
 
                         //seta o IP e Porta do nó destino no sockaddr_in 'to'
@@ -130,14 +130,14 @@ void *enviarFrames(void *param) {
                         montarFrame(&frame_env);
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > Frame Montado! tam_buffer_frame: '%d', tam_data: '%lu', tam_frame: '%lu'\n", frame_env.tam_buffer_frame,
+                        printf("Enlace.c = > Frame Montado! tam_buffer: '%d', tam_data: '%lu', tam_frame: '%lu'\n", frame_env.tam_buffer,
                                 sizeof (frame_env.data), sizeof (frame_env));
 #endif
 
                         //Testa MTU do frame vs MTU do nó
                         if (sizeof (frame_env) > mtu) {
                             printf("Enlace.c = > Erro de MTU\n");
-                            shm_env.erro = mtu;
+                            buffer_rede_enlace_env.retorno = mtu;
                             flag = 2;
                             break;
                         }
@@ -147,7 +147,7 @@ void *enviarFrames(void *param) {
 #endif	
 
                         //Funcão do calculo de checksum
-                        frame_env.ecc = checkSum(shm_env);
+                        frame_env.ecc = checkSum(buffer_rede_enlace_env.datagrama);
 
 #ifdef DEBBUG_ENLACE
                         printf("Enlace.c = > ECC Calculado! ecc: '%d'\n", frame_env.ecc);
@@ -170,13 +170,13 @@ void *enviarFrames(void *param) {
             }
         }
 
-        /*Teste da variavel flag para setar a variavel shm_env.erro*/
+        /*Teste da variavel flag para setar a variavel buffer_rede_enlace_env.retorno*/
 
         if (flag == 0) {
-            shm_env.erro = -1;
+            buffer_rede_enlace_env.retorno = -1;
         }
         else if (flag == 1) {
-            shm_env.erro = 0;
+            buffer_rede_enlace_env.retorno = 0;
         }
 
         //Destrava acesso exclusivo ao buffer
@@ -195,7 +195,6 @@ void *receberFrames(void *param) {
 
     int i, atoi_result, s, from_address_size;
     struct sockaddr_in from, server;
-
 
     //Cria socket
     if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -245,26 +244,24 @@ void *receberFrames(void *param) {
         //Trava acesso exclusivo ao buffer
         pthread_mutex_lock(&mutex_rcv3);
 
-        printf("\nEnlace.c (server)= > Frame Recebido! tam_buffer_frame: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer_frame,
+        printf("\nEnlace.c (server)= > Frame Recebido! tam_buffer: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer,
                 frame_rcv.ecc, sizeof (frame_rcv.data), sizeof (frame_rcv));
 
         //Monta Datagrama atravez do Frame recebido
-        montarDatagrama(frame_rcv);
+        montarBuffer(frame_rcv);
 
         printf("Enlace.c (server)= > Datagrama Montado!\n");
 
         //Recalculo do ECC do Datagrama montado
-        sum = checkSum(shm_rcv);
+        sum = checkSum(buffer_rede_enlace_rcv.datagrama);
 
         printf("Enlace.c (server) = > ECC Recalculado -> frame_rcv.ECC:'%d', ECC recalculado: '%d'\n", frame_rcv.ecc, sum);
 
         //Teste do ECC e retorno para cadamada de testeenlace(rede)
-        if (frame_rcv.ecc == sum)
-            printf("Enlace.c (server) = > Datagrama sem erro\n");
-        else {
-            printf("Enlace.c (server) = > Datagrama corrompido - Pacote Descartado\n");
-            //Flag que sinaliza o erro.
-            shm_rcv.erro = -1;
+        if (frame_rcv.ecc == sum){
+            buffer_rede_enlace_rcv.retorno = 0;
+        }else {
+            buffer_rede_enlace_rcv.retorno = -1;
         }
 
         //Libera acesso exclusivo ao buffer
@@ -276,26 +273,26 @@ void *receberFrames(void *param) {
     }
 }
 
-void montarDatagrama(struct frame datagram) {
+void montarBuffer(struct frame datagram) {
 
-    //Monta o datagrama
-    memcpy(&shm_rcv, &datagram.data, sizeof (datagram.data));
+    //Monta o buffer
+    memcpy(&buffer_rede_enlace_rcv.datagrama, &datagram.data, sizeof (datagram.data));
 
 }
 
 void montarFrame(struct frame *datagram) {
 
-    //Seta algumas variaveis
+    //Monta o Datagrama
 
     datagram->ecc = 0;
 
-    datagram->tam_buffer_frame = shm_env.tam_buffer;
+    datagram->tam_buffer = buffer_rede_enlace_env.tam_buffer;
 
-    shm_env.env_no = -1;
-    shm_env.erro = 0;
+    memcpy(&datagram->data, &buffer_rede_enlace_env.datagrama, sizeof (buffer_rede_enlace_env.datagrama));
 
-    //Monta o datagrama
-    memcpy(&datagram->data, &shm_env, sizeof (shm_env));
+    //DUVIDA
+    buffer_rede_enlace_env.env_no = -1;
+    buffer_rede_enlace_env.retorno = 0;
 
 }
 

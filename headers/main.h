@@ -16,9 +16,14 @@
 struct datagrama {
     int type;
     int tam_buffer;
-    int env_no;
     char buffer[100];
-    int erro;
+};
+
+struct buffer_rede {
+    int tam_buffer;
+    int env_no;
+    struct datagrama datagrama;
+    int retorno;
 };
 
 struct file {
@@ -26,7 +31,8 @@ struct file {
     int num_no;
 };
 
-struct datagrama shm_env, shm_rcv;
+struct datagrama datagrama_env,datagrama_rcv;
+struct buffer_rede buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 struct file file_info;
 pthread_mutex_t mutex_env1, mutex_env2, mutex_env3;
 pthread_mutex_t mutex_rcv1, mutex_rcv2, mutex_rcv3;

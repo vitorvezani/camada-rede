@@ -12,7 +12,7 @@
 
 int main(int argc, char const *argv[]) {
 
-    int te, tite;
+    int te, tr, ttr;
     pthread_t threadIniciaEnlace, threadIniciaRede, threadIniciaTesteRede;
 
     //Testa Parametros
@@ -27,17 +27,23 @@ int main(int argc, char const *argv[]) {
 
     printf("nome do arquivo: '%s'\n num do nó: '%d'\n", file_info.file_name, file_info.num_no);
 
-    //inicializacao do buffer Rede->Enlace(Enviar)
-    shm_env.erro = -9;
-    shm_env.env_no = -1;
-    strcpy(shm_env.buffer, "");
-    shm_env.tam_buffer = 0;
+    //inicializacao do buffer Rede->Enlace
+    buffer_rede_enlace_env.retorno = -9;
+    buffer_rede_enlace_env.env_no = -1;
+    buffer_rede_enlace_env.tam_buffer = 0;
 
-    //inicializacao do buffer Rede->Enlace(Receber)
-    shm_rcv.erro = -9;
-    shm_rcv.env_no = -1;
-    strcpy(shm_rcv.buffer, "");
-    shm_rcv.tam_buffer = 0;
+    buffer_rede_enlace_rcv.retorno = -9;
+    buffer_rede_enlace_rcv.env_no = -1;
+    buffer_rede_enlace_rcv.tam_buffer = 0;
+
+    //inicializacao do datagrama Rede
+    datagrama_env.type = -1;
+    datagrama_env.tam_buffer = 0;
+    strcpy(datagrama_env.buffer,"");
+
+    datagrama_rcv.type = -1;
+    datagrama_rcv.tam_buffer = 0;
+    strcpy(datagrama_rcv.buffer,"");
 
     //Inicializar Mutex Enviar
     pthread_mutex_init(&mutex_env1, NULL);
@@ -59,19 +65,19 @@ int main(int argc, char const *argv[]) {
     usleep(800);
 
     //Inicia a thread iniciarRede
-    tite = pthread_create(&threadIniciaRede, NULL, iniciarRede, NULL);
+    tr = pthread_create(&threadIniciaRede, NULL, iniciarRede, NULL);
 
-    if (tite) {
+    if (tr) {
         printf("ERRO: impossivel criar a thread : iniciarRede\n");
         exit(-1);
     }
 
     usleep(800);
 
-    //Inicia a thread iniciarRede
-    tite = pthread_create(&threadIniciaTesteRede, NULL, iniciarTesteRede, NULL);
+    //Inicia a thread iniciarTesteRede
+    ttr = pthread_create(&threadIniciaTesteRede, NULL, iniciarTesteRede, NULL);
 
-    if (tite) {
+    if (ttr) {
         printf("ERRO: impossivel criar a thread : iniciarTesteRede\n");
         exit(-1);
     }
