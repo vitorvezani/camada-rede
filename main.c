@@ -13,7 +13,7 @@
 int main(int argc, char const *argv[]) {
 
     int te, tr, ttr;
-    pthread_t threadIniciaEnlace, threadIniciaRede, threadIniciaTesteRede;
+    pthread_t threadIniciaEnlace, threadIniciaRede, threadIniciaTransporte;
 
     //Testa Parametros
     if (argc != 3) {
@@ -74,18 +74,18 @@ int main(int argc, char const *argv[]) {
 
     usleep(800);
 
-    //Inicia a thread iniciarTesteRede
-    ttr = pthread_create(&threadIniciaTesteRede, NULL, iniciarTesteRede, NULL);
+    //Inicia a thread iniciarTransporte
+    ttr = pthread_create(&threadIniciaTransporte, NULL, iniciarTransporte, NULL);
 
     if (ttr) {
-        printf("ERRO: impossivel criar a thread : iniciarTesteRede\n");
+        printf("ERRO: impossivel criar a thread : iniciarTransporte\n");
         exit(-1);
     }
 
     //Espera as threads terminarem
     pthread_join(threadIniciaEnlace, NULL);
     pthread_join(threadIniciaRede, NULL);
-    pthread_join(threadIniciaTesteRede, NULL);
+    pthread_join(threadIniciaTransporte, NULL);
 
     //Destroi o Mutex env
     pthread_mutex_destroy(&mutex_env1);

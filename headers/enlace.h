@@ -34,7 +34,7 @@ struct file {
 };
 
 struct frame {
-    int tam_buffer_frame;
+    int tam_buffer;
     struct datagrama data;
     int ecc;
 };
@@ -55,8 +55,8 @@ extern pthread_mutex_t mutex_rcv1, mutex_rcv2, mutex_rcv3;
 
 void colocarArquivoStruct(FILE * fp, struct ligacoes * ligacao);
 void retirarEspaco(char * string);
-void montarFrame(struct frame *datagram);
-void montarBuffer(struct frame datagram);
+void montarFrame(struct frame *frame);
+void montarBuffer(struct frame frame);
 void *enviarFrames(void *param);
 void *receberFrames(void *param);
-int checkSum(struct buffer_rede datagram);
+int checkSum(struct datagrama datagram);

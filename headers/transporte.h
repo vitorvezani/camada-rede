@@ -40,5 +40,4 @@ extern struct file file_info;
 extern pthread_mutex_t mutex_env1, mutex_env2, mutex_env3;
 extern pthread_mutex_t mutex_rcv1, mutex_rcv2, mutex_rcv3;
 
-void *enviarDatagramas();
-void *receberDatagramas();
+void *iniciarTransporte();

@@ -37,5 +37,6 @@ struct file file_info;
 pthread_mutex_t mutex_env1, mutex_env2, mutex_env3;
 pthread_mutex_t mutex_rcv1, mutex_rcv2, mutex_rcv3;
 
+void *iniciarTransporte();
 void *iniciarEnlace();
-void *iniciarTesteEnlace();
+void *iniciarRede();

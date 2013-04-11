@@ -8,17 +8,8 @@
 //  Copyright (c) 2013 Vitor Vezani. All rights reserved.
 //
 
-#include "headers/teste_rede.h"
+#include "headers/transporte.h"
 
-void *iniciarTesteRede() {
-
-}
-
-void *enviarDatagramas() {
-
-
-}
-
-void *receberDatagramas() {
+void *iniciarTransporte() {
 
 }

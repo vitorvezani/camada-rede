@@ -135,7 +135,7 @@ void *enviarFrames(void *param) {
 #endif
 
                         //Testa MTU do frame vs MTU do nó
-                        if (sizeof (frame_env) > mtu) {
+                        if (frame_env.tam_buffer > mtu) {
                             printf("Enlace.c = > Erro de MTU\n");
                             buffer_rede_enlace_env.retorno = mtu;
                             flag = 2;
@@ -147,7 +147,7 @@ void *enviarFrames(void *param) {
 #endif	
 
                         //Funcão do calculo de checksum
-                        frame_env.ecc = checkSum(buffer_rede_enlace_env.datagrama);
+                        frame_env.ecc = checkSum(frame_env.data);
 
 #ifdef DEBBUG_ENLACE
                         printf("Enlace.c = > ECC Calculado! ecc: '%d'\n", frame_env.ecc);
@@ -253,16 +253,15 @@ void *receberFrames(void *param) {
         printf("Enlace.c (server)= > Datagrama Montado!\n");
 
         //Recalculo do ECC do Datagrama montado
-        sum = checkSum(buffer_rede_enlace_rcv.datagrama);
+        sum = checkSum(frame_rcv.data);
 
         printf("Enlace.c (server) = > ECC Recalculado -> frame_rcv.ECC:'%d', ECC recalculado: '%d'\n", frame_rcv.ecc, sum);
 
         //Teste do ECC e retorno para cadamada de testeenlace(rede)
-        if (frame_rcv.ecc == sum){
+        if (frame_rcv.ecc == sum)
             buffer_rede_enlace_rcv.retorno = 0;
-        }else {
+        else 
             buffer_rede_enlace_rcv.retorno = -1;
-        }
 
         //Libera acesso exclusivo ao buffer
         pthread_mutex_unlock(&mutex_rcv3);
@@ -273,24 +272,26 @@ void *receberFrames(void *param) {
     }
 }
 
-void montarBuffer(struct frame datagram) {
+void montarBuffer(struct frame frame) {
 
     //Monta o buffer
-    memcpy(&buffer_rede_enlace_rcv.datagrama, &datagram.data, sizeof (datagram.data));
+    memcpy(&buffer_rede_enlace_rcv.datagrama, &frame.data, sizeof (frame.data));
+
+    buffer_rede_enlace_rcv.tam_buffer = frame.tam_buffer;
 
 }
 
-void montarFrame(struct frame *datagram) {
+void montarFrame(struct frame *frame) {
 
     //Monta o Datagrama
 
-    datagram->ecc = 0;
+    frame->ecc = 0;
 
-    datagram->tam_buffer = buffer_rede_enlace_env.tam_buffer;
+    frame->tam_buffer = buffer_rede_enlace_env.tam_buffer;
 
-    memcpy(&datagram->data, &buffer_rede_enlace_env.datagrama, sizeof (buffer_rede_enlace_env.datagrama));
+    memcpy(&frame->data, &buffer_rede_enlace_env.datagrama, sizeof (buffer_rede_enlace_env.datagrama));
 
-    //DUVIDA
+    //tam_
     buffer_rede_enlace_env.env_no = -1;
     buffer_rede_enlace_env.retorno = 0;
 

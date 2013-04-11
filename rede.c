@@ -55,8 +55,6 @@ void *enviarDatagramas() {
 
         if (buffer_rede_enlace_env.tam_buffer != 0) {
 
-            printf("Rede.c (Enviar - Retorno) = > Type: '%d', Num nó: '%d', Data: '%s', Tamanho : '%d'\n", buffer_rede_enlace_env.type, buffer_rede_enlace_env.env_no, buffer_rede_enlace_env.buffer, buffer_rede_enlace_env.tam_buffer);
-
             //Testa o retorno da camada de enlace
             if (buffer_rede_enlace_env.retorno == 0) {
                 printf("Rede.c (Enviar - Retorno) = > OK\n\n");
@@ -68,9 +66,8 @@ void *enviarDatagramas() {
                 printf("Rede.c (Enviar - Retorno) = > Erro desconhecido\n\n");
 
             //Reseta os valores
-            buffer_rede_enlace_env.tam_buffer = 0;
-            buffer_rede_enlace_env.env_no = 0;
-            strcpy(buffer_rede_enlace_env.buffer, "");
+            datagrama_env.tam_buffer = 0;
+            strcpy(datagrama_env.buffer, "");
             buffer_rede_enlace_env.retorno = 0;
 
         }
@@ -84,7 +81,7 @@ void *enviarDatagramas() {
 
         //Seta tipo de msg, tamanho da msg e nó para enviar
         datagrama_env.type = 2;
-        datagrama_env.tam_buffer = strlen(buffer_rede_enlace_env.buffer);
+        datagrama_env.tam_buffer = strlen(datagrama_env.buffer);
 
         //Colocar no Buffer
         buffer_rede_enlace_env.env_no = 2;
@@ -112,16 +109,17 @@ void *receberDatagramas() {
 
         if (buffer_rede_enlace_rcv.tam_buffer != 0) {
 
-            if (buffer_rede_enlace_rcv.retorno = 0)
+            if (buffer_rede_enlace_rcv.retorno == 0)
             {
                 montarDatagrama(&datagrama_rcv);
                 
                 printf("Rede.c (Receber) = > Type: '%d', Tam_buffer: '%d' Bytes, Buffer: '%s'\n", datagrama_rcv.type, datagrama_rcv.tam_buffer,
                 datagrama_rcv.buffer);
             }
-
-            else{
+            else if (buffer_rede_enlace_rcv.retorno == -1){
                 printf("Rede.c (Receber) = > ERRO: Datagrama descartado!\n");
+            }else{
+                printf("Erro de MTU, fragmentar o datagrama no maximo em '%d' bytes\n", buffer_rede_enlace_rcv.retorno);
             }
 
         }
