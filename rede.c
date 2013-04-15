@@ -43,7 +43,7 @@ void *enviarDatagramas() {
     while (1) {
 
         //Trava o Mutex de sincronismo
-        pthread_mutex_lock(&mutex_env1);
+        pthread_mutex_lock(&mutex_rede_enlace_env1);
 
         usleep(300);
 
@@ -51,7 +51,7 @@ void *enviarDatagramas() {
         fflush(stdin);
 
         //Trava acesso exclusivo
-        pthread_mutex_lock(&mutex_env3);
+        pthread_mutex_lock(&mutex_rede_enlace_env3);
 
         if (buffer_rede_enlace_env.tam_buffer != 0) {
 
@@ -89,10 +89,10 @@ void *enviarDatagramas() {
         memcpy(&buffer_rede_enlace_env.datagrama, &datagrama_env, sizeof(datagrama_env));
 
         //Destrava acesso exclusivo
-        pthread_mutex_unlock(&mutex_env3);
+        pthread_mutex_unlock(&mutex_rede_enlace_env3);
 
         //Destrava mutex de sincronismo
-        pthread_mutex_unlock(&mutex_env2);
+        pthread_mutex_unlock(&mutex_rede_enlace_env2);
 
     }
 }
@@ -102,10 +102,10 @@ void *receberDatagramas() {
     while (TRUE) {
 
         //Trava mutex de sincronismo
-        pthread_mutex_lock(&mutex_rcv2);
+        pthread_mutex_lock(&mutex_rede_enlace_rcv2);
 
         //Trava acesso exclusivo
-        pthread_mutex_lock(&mutex_rcv3);
+        pthread_mutex_lock(&mutex_rede_enlace_rcv3);
 
         if (buffer_rede_enlace_rcv.tam_buffer != 0) {
 
@@ -124,10 +124,10 @@ void *receberDatagramas() {
 
         }
         //Libera acesso exclusivo
-        pthread_mutex_unlock(&mutex_rcv3);
+        pthread_mutex_unlock(&mutex_rede_enlace_rcv3);
 
         //Destrava mutex de sinconismo
-        pthread_mutex_unlock(&mutex_rcv1);
+        pthread_mutex_unlock(&mutex_rede_enlace_rcv1);
     }
 }
 

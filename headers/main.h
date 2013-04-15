@@ -19,6 +19,25 @@ struct datagrama {
     char buffer[100];
 };
 
+struct segmento {
+    int tam_buffer;
+    char buffer[100];
+};
+
+struct buffer_trans {
+    int tam_buffer;
+    int env_no;
+    struct segmento segmento;
+    int retorno;
+};
+
+struct buffer_trans {
+    int tam_buffer;
+    int env_no;
+    struct datagrama datagrama;
+    int retorno;
+};
+
 struct buffer_rede {
     int tam_buffer;
     int env_no;
@@ -32,10 +51,17 @@ struct file {
 };
 
 struct datagrama datagrama_env,datagrama_rcv;
+struct segmento segmento_env,segmento_rcv;
+
 struct buffer_rede buffer_rede_enlace_env, buffer_rede_enlace_rcv;
+struct buffer_trans buffer_trans_rede_env, buffer_trans_rede_rcv;
+
 struct file file_info;
-pthread_mutex_t mutex_env1, mutex_env2, mutex_env3;
-pthread_mutex_t mutex_rcv1, mutex_rcv2, mutex_rcv3;
+
+pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2, mutex_rede_enlace_env3;
+pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2, mutex_rede_enlace_rcv3;
+pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans_rede_env3;
+pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
 
 void *iniciarTransporte();
 void *iniciarEnlace();

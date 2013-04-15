@@ -81,14 +81,14 @@ void *enviarFrames(void *param) {
         int s, mtu;
 
         //trava mutex de sincronismo
-        pthread_mutex_lock(&mutex_env2);
+        pthread_mutex_lock(&mutex_rede_enlace_env2);
 
         flag = 0;
 
         fflush(stdin);
 
         //Trava acesso exclusivo ao buffer
-        pthread_mutex_lock(&mutex_env3);
+        pthread_mutex_lock(&mutex_rede_enlace_env3);
 
         //Loop no ligacao enlaces
         for (i = 0; i < 18; ++i) {
@@ -180,10 +180,10 @@ void *enviarFrames(void *param) {
         }
 
         //Destrava acesso exclusivo ao buffer
-        pthread_mutex_unlock(&mutex_env3);
+        pthread_mutex_unlock(&mutex_rede_enlace_env3);
 
         //Libera mutex para sincronismo
-        pthread_mutex_unlock(&mutex_env1);
+        pthread_mutex_unlock(&mutex_rede_enlace_env1);
     }
 }
 
@@ -232,7 +232,7 @@ void *receberFrames(void *param) {
         int sum = 0;
 
         //Trava o mutex de sincronismo
-        pthread_mutex_lock(&mutex_rcv1);
+        pthread_mutex_lock(&mutex_rede_enlace_rcv1);
 
         //Fica esperando receber Frames
         from_address_size = sizeof (from);
@@ -242,7 +242,7 @@ void *receberFrames(void *param) {
         }
 
         //Trava acesso exclusivo ao buffer
-        pthread_mutex_lock(&mutex_rcv3);
+        pthread_mutex_lock(&mutex_rede_enlace_rcv3);
 
         printf("\nEnlace.c (server)= > Frame Recebido! tam_buffer: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer,
                 frame_rcv.ecc, sizeof (frame_rcv.data), sizeof (frame_rcv));
@@ -264,10 +264,10 @@ void *receberFrames(void *param) {
             buffer_rede_enlace_rcv.retorno = -1;
 
         //Libera acesso exclusivo ao buffer
-        pthread_mutex_unlock(&mutex_rcv3);
+        pthread_mutex_unlock(&mutex_rede_enlace_rcv3);
 
         //Libera mutex de sincronismo
-        pthread_mutex_unlock(&mutex_rcv2);
+        pthread_mutex_unlock(&mutex_rede_enlace_rcv2);
 
     }
 }

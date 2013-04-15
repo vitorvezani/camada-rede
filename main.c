@@ -45,14 +45,22 @@ int main(int argc, char const *argv[]) {
     datagrama_rcv.tam_buffer = 0;
     strcpy(datagrama_rcv.buffer,"");
 
-    //Inicializar Mutex Enviar
-    pthread_mutex_init(&mutex_env1, NULL);
-    pthread_mutex_init(&mutex_env2, NULL);
-    pthread_mutex_init(&mutex_env3, NULL);
-    //Inicializar Mutex Receber
-    pthread_mutex_init(&mutex_rcv1, NULL);
-    pthread_mutex_init(&mutex_rcv2, NULL);
-    pthread_mutex_init(&mutex_rcv3, NULL);
+    //Inicializar Mutex Rede->Enlace Enviar
+    pthread_mutex_init(&mutex_rede_enlace_env1, NULL);
+    pthread_mutex_init(&mutex_rede_enlace_env2, NULL);
+    pthread_mutex_init(&mutex_rede_enlace_env3, NULL);
+    //Inicializar Mutex Rede->Enlace Receber
+    pthread_mutex_init(&mutex_rede_enlace_rcv1, NULL);
+    pthread_mutex_init(&mutex_rede_enlace_rcv2, NULL);
+    pthread_mutex_init(&mutex_rede_enlace_rcv3, NULL);
+    //Inicializar Mutex Trans->Rede Enviar
+    pthread_mutex_init(&mutex_trans_rede_env1, NULL);
+    pthread_mutex_init(&mutex_trans_rede_env2, NULL);
+    pthread_mutex_init(&mutex_trans_rede_env3, NULL);
+    //Inicializar Mutex Trans->Rede Receber
+    pthread_mutex_init(&mutex_trans_rede_rcv1, NULL);
+    pthread_mutex_init(&mutex_trans_rede_rcv2, NULL);
+    pthread_mutex_init(&mutex_trans_rede_rcv3, NULL);
 
     //Inicia a thread iniciarEnlace
     te = pthread_create(&threadIniciaEnlace, NULL, iniciarEnlace, NULL);
@@ -87,14 +95,22 @@ int main(int argc, char const *argv[]) {
     pthread_join(threadIniciaRede, NULL);
     pthread_join(threadIniciaTransporte, NULL);
 
-    //Destroi o Mutex env
-    pthread_mutex_destroy(&mutex_env1);
-    pthread_mutex_destroy(&mutex_env2);
-    pthread_mutex_destroy(&mutex_env3);
-    //Destroi o Mutex rcv
-    pthread_mutex_destroy(&mutex_rcv1);
-    pthread_mutex_destroy(&mutex_rcv2);
-    pthread_mutex_destroy(&mutex_rcv3);
+    //Destroi o Mutex Rede->Enlace env
+    pthread_mutex_destroy(&mutex_rede_enlace_env1);
+    pthread_mutex_destroy(&mutex_rede_enlace_env2);
+    pthread_mutex_destroy(&mutex_rede_enlace_env3);
+    //Destroi o Mutex Rede->Enlace rcv
+    pthread_mutex_destroy(&mutex_rede_enlace_rcv1);
+    pthread_mutex_destroy(&mutex_rede_enlace_rcv2);
+    pthread_mutex_destroy(&mutex_rede_enlace_rcv3);
+    //Destroi o Mutex Trans->Rede env
+    pthread_mutex_destroy(&mutex_trans_rede_env1);
+    pthread_mutex_destroy(&mutex_trans_rede_env2);
+    pthread_mutex_destroy(&mutex_trans_rede_env3);
+    //Destroi o Mutex Trans->Rede rcv
+    pthread_mutex_destroy(&mutex_trans_rede_rcv1);
+    pthread_mutex_destroy(&mutex_trans_rede_rcv2);
+    pthread_mutex_destroy(&mutex_trans_rede_rcv3);
 
     return 0;
 }
