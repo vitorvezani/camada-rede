@@ -118,10 +118,7 @@ void *receberDatagramas() {
             }
             else if (buffer_rede_enlace_rcv.retorno == -1){
                 printf("Rede.c (Receber) = > ERRO: Datagrama descartado!\n");
-            }else{
-                printf("Erro de MTU, fragmentar o datagrama no maximo em '%d' bytes\n", buffer_rede_enlace_rcv.retorno);
             }
-
         }
         //Libera acesso exclusivo
         pthread_mutex_unlock(&mutex_rede_enlace_rcv3);
@@ -134,5 +131,12 @@ void *receberDatagramas() {
 void montarDatagrama(struct datagrama *datagram){
 
     memcpy(datagram, &buffer_rede_enlace_rcv.datagrama, sizeof (buffer_rede_enlace_rcv.datagrama));
+
+}
+
+void *receberSegmento(){
+
+}
+void *EnviarSegmento() {
 
 }

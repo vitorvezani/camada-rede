@@ -26,24 +26,22 @@ int main(int argc, char const *argv[]) {
     file_info.num_no = atoi(argv[2]);
 
     printf("nome do arquivo: '%s'\n num do nó: '%d'\n", file_info.file_name, file_info.num_no);
+    
+    //inicializacao do buffer Trans->Rede
+    buffer_trans_rede_env.tam_buffer = 0;
+    buffer_trans_rede_rcv.tam_buffer = 0;
 
     //inicializacao do buffer Rede->Enlace
-    buffer_rede_enlace_env.retorno = -9;
-    buffer_rede_enlace_env.env_no = -1;
     buffer_rede_enlace_env.tam_buffer = 0;
-
-    buffer_rede_enlace_rcv.retorno = -9;
-    buffer_rede_enlace_rcv.env_no = -1;
     buffer_rede_enlace_rcv.tam_buffer = 0;
 
     //inicializacao do datagrama Rede
-    datagrama_env.type = -1;
     datagrama_env.tam_buffer = 0;
-    strcpy(datagrama_env.buffer,"");
-
-    datagrama_rcv.type = -1;
     datagrama_rcv.tam_buffer = 0;
-    strcpy(datagrama_rcv.buffer,"");
+
+    //inicializacao do segmento Transporte
+    segmento_env.tam_buffer = 0;
+    segmento_rcv.tam_buffer = 0;
 
     //Inicializar Mutex Rede->Enlace Enviar
     pthread_mutex_init(&mutex_rede_enlace_env1, NULL);
