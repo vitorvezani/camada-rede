@@ -34,12 +34,13 @@ void *iniciarTransporte() {
     //Espera as threads terminarem
     pthread_join(threadEnviarSegmentos, NULL);
     pthread_join(threadReceberSegmentos, NULL);
-
+    
 }
 
 void *enviarSegmentos(){
 
 	char dados_aux[128];
+	char *pch;
 
     while (1) {
 
@@ -56,36 +57,28 @@ void *enviarSegmentos(){
 
         if (buffer_trans_rede_env.tam_buffer != 0) {
 
-            //Testa o retorno da camada de enlace
-            if (buffer_trans_rede_env.retorno == 0) {
-                printf("Transporte.c (Enviar - Retorno) = > OK\n\n");
-            } else if (buffer_trans_rede_env.retorno == -1) {
-                printf("Transporte.c (Enviar - Retorno) = > Não há ligacao do nó: '%d'!\n\n", buffer_trans_rede_env.env_no);
-            } else if (buffer_trans_rede_env.retorno > 0) {
-                printf("Transporte.c (Enviar - Retorno) = > MTU excedido dividir o pacote no MAX em '%d' bytes\n\n", buffer_trans_rede_env.retorno);
-            } else
-                printf("Transporte.c (Enviar - Retorno) = > Erro desconhecido\n\n");
-
-            //Reseta os valores
-            segmento_env.tam_buffer = 0;
-            strcpy(segmento_env.buffer, "");
-            buffer_trans_rede_env.retorno = 0;
-
         }
 
         //Pega os Dados digitado pelo usuario
-        printf("Transporte.c (Enviar) = > Digite o Conteudo de data: ");
+        printf("Transporte.c (Enviar) = > env_no;texto => ");
         fgets(dados_aux, 127, stdin);
         dados_aux[strlen(dados_aux) - 1] = '\0';
 
-        strcpy(segmento_env.buffer, dados_aux);
+        pch = strtok(dados_aux, ";");
 
-        //Seta tipo de msg, tamanho da msg e nó para enviar
+		printf("nó : %s\n",pch);
+		strcpy(segmento_env.buffer, pch);
+
+        pch = strtok(NULL, ";");
+
+        printf("Texto: %s\n",pch);
+       	segmento_env.env_no = atoi(pch);
+
         segmento_env.tam_buffer = strlen(segmento_env.buffer);
 
         //Colocar no Buffer
-        buffer_trans_rede_env.env_no = 2;
         buffer_trans_rede_env.tam_buffer = segmento_env.tam_buffer;
+        buffer_trans_rede_env.env_no = segmento_env.env_no;
         memcpy(&buffer_trans_rede_env.segmento, &segmento_env, sizeof(segmento_env));
 
         //Destrava acesso exclusivo

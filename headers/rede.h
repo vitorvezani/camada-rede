@@ -57,8 +57,8 @@ extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2, mutex_red
 extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans_rede_env3;
 extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
 
-void *enviarSegmentos();
+void enviarSegmentos();
 void *receberSegmentos();
-void *enviarDatagramas();
+void enviarDatagramas();
 void *receberDatagramas();
 void montarDatagrama(struct datagrama *datagram);
