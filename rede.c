@@ -40,16 +40,17 @@ void *receberSegmento(){
 
     while (1) {
 
-        //Trava o Mutex de sincronismo
-        pthread_mutex_lock(&mutex_trans_rede_env2);
+            //Trava o Mutex de sincronismo
+            pthread_mutex_lock(&mutex_trans_rede_env2);
 
 
-        //Destrava mutex de sincronismo
-        pthread_mutex_unlock(&mutex_trans_rede_env1);
+            colocarDatagramaBufferInterno();
 
-        enviarDatagramas();
 
-    }
+            //Destrava mutex de sincronismo
+            pthread_mutex_unlock(&mutex_trans_rede_env1);
+
+        }
 }
 
 void *enviarVetorDistancia(){
@@ -90,15 +91,35 @@ void colocarDatagramaBufferInterno() {
         else
             exit(1);
 
-
-
         //Destrava mutex de sincronismo
         pthread_mutex_unlock(&mutex_rede_enlace_env5);
     }
 }
 
-void enviarDatagramas() {
+void *enviarDatagramas() {
 
+    while(1){
+
+        //Trava o Mutex de sincronismo
+        pthread_mutex_lock(&mutex_rede_enlace_env5);
+
+
+
+
+
+        if (/* condition */)
+            pthread_mutex_unlock(&mutex_rede_enlace_env4);
+        else if (/* condition */)
+            pthread_mutex_unlock(&mutex_rede_enlace_env6);
+        else if (/* condition */)
+            pthread_mutex_unlock(&mutex_rede_enlace_env7);
+    }
+
+}
+
+void montarDatagramas(struct datagrama *datagram){
+
+    memcpy(datagram, &buffer_rede_enlace_rcv.datagrama, sizeof (buffer_rede_enlace_rcv.datagrama));
 
 }
 
