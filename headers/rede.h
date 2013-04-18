@@ -19,6 +19,10 @@
 struct datagrama {
     int type;
     int tam_buffer;
+    int offset;
+    int id;
+    int tamanho total;
+    int mf;
     char buffer[100];
 };
 
@@ -27,14 +31,14 @@ struct segmento {
     char buffer[100];
 };
 
-struct buffer_trans {
+struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
-    struct datagrama datagrama;
+    struct segmento segmento;
     int retorno;
 };
 
-struct buffer_rede {
+struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
     struct datagrama datagrama;
@@ -48,8 +52,8 @@ struct file {
 
 extern struct datagrama datagrama_env,datagrama_rcv;
 
-extern struct buffer_rede buffer_rede_enlace_env, buffer_rede_enlace_rcv;
-extern struct buffer_trans buffer_trans_rede_env, buffer_trans_rede_rcv;
+extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
+extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 extern struct file file_info;
 
 extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2, mutex_rede_enlace_env3;

@@ -59,6 +59,10 @@ int main(int argc, char const *argv[]) {
     pthread_mutex_init(&mutex_trans_rede_rcv1, NULL);
     pthread_mutex_init(&mutex_trans_rede_rcv2, NULL);
     pthread_mutex_init(&mutex_trans_rede_rcv3, NULL);
+    //Inicializar Mutex Rede
+    pthread_mutex_init(&mutex_rede1, NULL);
+    pthread_mutex_init(&mutex_rede2, NULL);
+
 
     //Inicia a thread iniciarEnlace
     te = pthread_create(&threadIniciaEnlace, NULL, iniciarEnlace, NULL);

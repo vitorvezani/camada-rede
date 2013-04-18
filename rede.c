@@ -13,17 +13,17 @@
 void *iniciarRede() {
 
     int te, tr;
-    pthread_t threadEnviarDatagramas, threadReceberDatagramas;
+    pthread_t threadReceberSegmento, threadReceberDatagramas;
 
-    //Inicia a thread enviarDatagramas
-    te = pthread_create(&threadEnviarDatagramas, NULL, enviarDatagramas, NULL);
+    //Inicia a thread receberSegmento
+    te = pthread_create(&threadReceberSegmento, NULL, receberSegmento, NULL);
 
     if (te) {
-        printf("ERRO: impossivel criar a thread : enviarDatagramas\n");
+        printf("ERRO: impossivel criar a thread : receberSegmento\n");
         exit(-1);
     }
 
-    //Inicia a thread enviarDatagramas
+    //Inicia a thread receberDatagramas
     tr = pthread_create(&threadReceberDatagramas, NULL, receberDatagramas, NULL);
 
     if (tr) {
@@ -32,67 +32,27 @@ void *iniciarRede() {
     }
 
     //Espera as threads terminarem
-    pthread_join(threadEnviarDatagramas, NULL);
+    pthread_join(threadReceberSegmento, NULL);
     pthread_join(threadReceberDatagramas, NULL);
 }
 
-void *enviarDatagramas() {
-
-    char dados_aux[128];
+void *receberSegmento() {
 
     while (1) {
 
         //Trava o Mutex de sincronismo
-        pthread_mutex_lock(&mutex_rede_enlace_env1);
-
-        usleep(300);
-
-        fpurge(stdin);
-        fflush(stdin);
+        pthread_mutex_lock(&mutex_trans_rede_env2);
 
         //Trava acesso exclusivo
-        pthread_mutex_lock(&mutex_rede_enlace_env3);
+        pthread_mutex_lock(&mutex_trans_rede_env3);
 
-        if (buffer_rede_enlace_env.tam_buffer != 0) {
-
-            //Testa o retorno da camada de enlace
-            if (buffer_rede_enlace_env.retorno == 0) {
-                printf("Rede.c (Enviar - Retorno) = > OK\n\n");
-            } else if (buffer_rede_enlace_env.retorno == -1) {
-                printf("Rede.c (Enviar - Retorno) = > Não há ligacao do nó: '%d'!\n\n", buffer_rede_enlace_env.env_no);
-            } else if (buffer_rede_enlace_env.retorno > 0) {
-                printf("Rede.c (Enviar - Retorno) = > MTU excedido dividir o pacote no MAX em '%d' bytes\n\n", buffer_rede_enlace_env.retorno);
-            } else
-                printf("Rede.c (Enviar - Retorno) = > Erro desconhecido\n\n");
-
-            //Reseta os valores
-            datagrama_env.tam_buffer = 0;
-            strcpy(datagrama_env.buffer, "");
-            buffer_rede_enlace_env.retorno = 0;
-
-        }
-
-        //Pega os Dados digitado pelo usuario
-        printf("Rede.c (Enviar) = > Digite o Conteudo de data: ");
-        fgets(dados_aux, 127, stdin);
-        dados_aux[strlen(dados_aux) - 1] = '\0';
-
-        strcpy(datagrama_env.buffer, dados_aux);
-
-        //Seta tipo de msg, tamanho da msg e nó para enviar
-        datagrama_env.type = 2;
-        datagrama_env.tam_buffer = strlen(datagrama_env.buffer);
-
-        //Colocar no Buffer
-        buffer_rede_enlace_env.env_no = 2;
-        buffer_rede_enlace_env.tam_buffer = datagrama_env.tam_buffer;
-        memcpy(&buffer_rede_enlace_env.datagrama, &datagrama_env, sizeof(datagrama_env));
+        enviarDatagrama();
 
         //Destrava acesso exclusivo
-        pthread_mutex_unlock(&mutex_rede_enlace_env3);
+        pthread_mutex_unlock(&mutex_trans_rede_env3);
 
         //Destrava mutex de sincronismo
-        pthread_mutex_unlock(&mutex_rede_enlace_env2);
+        pthread_mutex_unlock(&mutex_trans_rede_env1);
 
     }
 }
@@ -128,15 +88,24 @@ void *receberDatagramas() {
     }
 }
 
+void *enviarDatagrama() {
+
+    pthread_mutex_lock(&mutex_rede_enlace_env1);
+
+        buffer_rede_enlace_rcv = ;
+
+        montarDatagrama();
+
+    pthread_mutex_unlock(&mutex_rede_enlace_env1);
+
+}
+
+void enviarSegmento() {
+
+}
+
 void montarDatagrama(struct datagrama *datagram){
 
     memcpy(datagram, &buffer_rede_enlace_rcv.datagrama, sizeof (buffer_rede_enlace_rcv.datagrama));
-
-}
-
-void *receberSegmento(){
-
-}
-void *EnviarSegmento() {
 
 }

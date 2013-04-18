@@ -93,7 +93,8 @@ void *enviarFrames(void *param) {
         //Loop no ligacao enlaces
         for (i = 0; i < 18; ++i) {
             //Verificar se existe ligacao entre seu nó e o nó destino
-            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])) {
+            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])){
+                
 #ifdef DEBBUG_ENLACE
                 printf("Enlace.c = > Existe Ligacao nos [Enlaces]\n");
 #endif

@@ -18,10 +18,14 @@
 struct datagrama {
     int type;
     int tam_buffer;
+    int offset;
+    int id;
+    int tamanho total;
+    int mf;
     char buffer[100];
 };
 
-struct buffer_rede {
+struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
     struct datagrama datagrama;
@@ -47,7 +51,7 @@ struct frame {
 #define NOS 			1
 #define ENLACES 		2
 
-extern struct buffer_rede buffer_rede_enlace_env, buffer_rede_enlace_rcv;
+extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct file file_info;
 
 extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2, mutex_rede_enlace_env3;

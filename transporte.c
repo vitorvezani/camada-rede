@@ -40,6 +40,7 @@ void *iniciarTransporte() {
 void *enviarSegmentos(){
 
 	char dados_aux[128];
+    char *pch;
 
     while (1) {
 
@@ -78,14 +79,22 @@ void *enviarSegmentos(){
         fgets(dados_aux, 127, stdin);
         dados_aux[strlen(dados_aux) - 1] = '\0';
 
-        strcpy(segmento_env.buffer, dados_aux);
+        pch = strtok(dados_aux, ";");
+
+        printf("nó : %s\n",pch);
+        segmento_env.env_no = atoi(pch);
+
+        pch = strtok(NULL, ";");
+
+        printf("Texto: %s\n",pch);
+        strcpy(segmento_env.buffer,pch);
 
         //Seta tipo de msg, tamanho da msg e nó para enviar
         segmento_env.tam_buffer = strlen(segmento_env.buffer);
 
         //Colocar no Buffer
-        buffer_trans_rede_env.env_no = 2;
         buffer_trans_rede_env.tam_buffer = segmento_env.tam_buffer;
+        buffer_trans_rede_env.env_no = segmento_env.env_no;
         memcpy(&buffer_trans_rede_env.segmento, &segmento_env, sizeof(segmento_env));
 
         //Destrava acesso exclusivo
@@ -119,8 +128,6 @@ void *receberSegmentos(){
             }
             else if (buffer_trans_rede_rcv.retorno == -1){
                 printf("Transporte.c (Receber) = > ERRO: Datagrama descartado!\n");
-            }else{
-                printf("Erro de MTU, fragmentar o segmento no maximo em '%d' bytes\n", buffer_trans_rede_rcv.retorno);
             }
 
         }
@@ -133,8 +140,8 @@ void *receberSegmentos(){
 
 }
 
-void montarSegmento(){
+void montarSegmento(struct segmento *segment);{
 
-	memcpy(datagram, &buffer_rede_enlace_rcv.datagrama, sizeof (buffer_rede_enlace_rcv.datagrama));
+	memcpy(segment, &buffer_trans_rede_rcv.segmento, sizeof (buffer_trans_rede_rcv.segmento));
 
 }
