@@ -35,14 +35,6 @@ int main(int argc, char const *argv[]) {
     buffer_rede_enlace_env.tam_buffer = 0;
     buffer_rede_enlace_rcv.tam_buffer = 0;
 
-    //inicializacao do datagrama Rede
-    datagrama_env.tam_buffer = 0;
-    datagrama_rcv.tam_buffer = 0;
-
-    //inicializacao do segmento Transporte
-    segmento_env.tam_buffer = 0;
-    segmento_rcv.tam_buffer = 0;
-
     //Inicializar Mutex Rede->Enlace Enviar
     pthread_mutex_init(&mutex_rede_enlace_env1, NULL);
     pthread_mutex_init(&mutex_rede_enlace_env2, NULL);
@@ -59,9 +51,9 @@ int main(int argc, char const *argv[]) {
     pthread_mutex_init(&mutex_trans_rede_rcv1, NULL);
     pthread_mutex_init(&mutex_trans_rede_rcv2, NULL);
     pthread_mutex_init(&mutex_trans_rede_rcv3, NULL);
-    //Inicializar Mutex Rede
-    pthread_mutex_init(&mutex_rede1, NULL);
-    pthread_mutex_init(&mutex_rede2, NULL);
+    //Inicializar Mutex Interno Rede
+    //pthread_mutex_init(&mutex_rede1, NULL);
+    //pthread_mutex_init(&mutex_rede2, NULL);
 
 
     //Inicia a thread iniciarEnlace

@@ -16,16 +16,6 @@
 #define TRUE 	1
 #define FALSE	0
 
-struct datagrama {
-    int type;
-    int tam_buffer;
-    int offset;
-    int id;
-    int tamanho total;
-    int mf;
-    char buffer[100];
-};
-
 struct segmento {
     int tam_buffer;
     char buffer[100];
@@ -34,16 +24,25 @@ struct segmento {
 struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
-    struct segmento segmento;
     int retorno;
+    struct segmento data;
+};
+
+struct datagrama {
+    int tam_buffer;
+    int offset;
+    int id;
+    int tamanho_total;
+    int mf;
+    int type;
+    int env_no;
+    struct segmento data;
 };
 
 struct file {
     char file_name[20];
     int num_no;
 };
-
-extern struct segmento segmento_env,segmento_rcv;
 
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 extern struct file file_info;
@@ -53,3 +52,4 @@ extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans
 
 void *enviarSegmentos();
 void *receberSegmentos();
+void montarSegmento(struct segmento *segment);

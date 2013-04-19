@@ -94,7 +94,7 @@ void *enviarFrames(void *param) {
         for (i = 0; i < 18; ++i) {
             //Verificar se existe ligacao entre seu nó e o nó destino
             if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])){
-                
+
 #ifdef DEBBUG_ENLACE
                 printf("Enlace.c = > Existe Ligacao nos [Enlaces]\n");
 #endif
@@ -135,7 +135,7 @@ void *enviarFrames(void *param) {
                                 sizeof (frame_env.data), sizeof (frame_env));
 #endif
 
-                        //Testa MTU do frame vs MTU do nó
+                        //Testa tam dos dados vs MTU do nó
                         if (frame_env.tam_buffer > mtu) {
                             printf("Enlace.c = > Erro de MTU\n");
                             buffer_rede_enlace_env.retorno = mtu;
@@ -144,7 +144,7 @@ void *enviarFrames(void *param) {
                         }
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > sizeof(Frame): '%lu', MTU: '%d'\n", sizeof (frame_env), ligacao.enlaces[i][2]);
+                        printf("Enlace.c = > frame_env.tam_buffer: '%d', MTU: '%d'\n", frame_env.tam_buffer, ligacao.enlaces[i][2]);
 #endif	
 
                         //Funcão do calculo de checksum
@@ -276,7 +276,7 @@ void *receberFrames(void *param) {
 void montarBuffer(struct frame frame) {
 
     //Monta o buffer
-    memcpy(&buffer_rede_enlace_rcv.datagrama, &frame.data, sizeof (frame.data));
+    memcpy(&buffer_rede_enlace_rcv.data, &frame.data, sizeof (frame.data));
 
     buffer_rede_enlace_rcv.tam_buffer = frame.tam_buffer;
 
@@ -290,7 +290,7 @@ void montarFrame(struct frame *frame) {
 
     frame->tam_buffer = buffer_rede_enlace_env.tam_buffer;
 
-    memcpy(&frame->data, &buffer_rede_enlace_env.datagrama, sizeof (buffer_rede_enlace_env.datagrama));
+    memcpy(&frame->data, &buffer_rede_enlace_env.data, sizeof (buffer_rede_enlace_env.data));
 
     //tam_
     buffer_rede_enlace_env.env_no = -1;

@@ -13,16 +13,6 @@
 #include <string.h>
 #include <pthread.h>     	/* para poder manipular threads */
 
-struct datagrama {
-    int type;
-    int tam_buffer;
-    int offset;
-    int id;
-    int tamanho total;
-    int mf;
-    char buffer[100];
-};
-
 struct segmento {
     int tam_buffer;
     char buffer[100];
@@ -31,24 +21,32 @@ struct segmento {
 struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
-    struct segmento segmento;
     int retorno;
+    struct segmento data;
+};
+
+struct datagrama {
+    int tam_buffer;
+    int offset;
+    int id;
+    int tamanho_total;
+    int mf;
+    int type;
+    int env_no;
+    struct segmento data;
 };
 
 struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
-    struct datagrama datagrama;
     int retorno;
+    struct datagrama data;
 };
 
 struct file {
     char file_name[20];
     int num_no;
 };
-
-struct datagrama datagrama_env,datagrama_rcv;
-struct segmento segmento_env,segmento_rcv;
 
 struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;

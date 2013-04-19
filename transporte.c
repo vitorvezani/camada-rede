@@ -44,6 +44,8 @@ void *enviarSegmentos(){
 
     while (1) {
 
+        struct segmento segmento_env;
+
         //Trava o Mutex de sincronismo
         pthread_mutex_lock(&mutex_trans_rede_env1);
 
@@ -55,53 +57,51 @@ void *enviarSegmentos(){
         //Trava acesso exclusivo
         pthread_mutex_lock(&mutex_trans_rede_env3);
 
-        if (buffer_trans_rede_env.tam_buffer != 0) {
+            //Pega os Dados digitado pelo usuario
+            printf("Transporte.c (Enviar) = > Digite nó e data: ");
+            fgets(dados_aux, 127, stdin);
+            dados_aux[strlen(dados_aux) - 1] = '\0';
 
-            //Testa o retorno da camada de enlace
-            if (buffer_trans_rede_env.retorno == 0) {
-                printf("Transporte.c (Enviar - Retorno) = > OK\n\n");
-            } else if (buffer_trans_rede_env.retorno == -1) {
-                printf("Transporte.c (Enviar - Retorno) = > Não há ligacao do nó: '%d'!\n\n", buffer_trans_rede_env.env_no);
-            } else if (buffer_trans_rede_env.retorno > 0) {
-                printf("Transporte.c (Enviar - Retorno) = > MTU excedido dividir o pacote no MAX em '%d' bytes\n\n", buffer_trans_rede_env.retorno);
-            } else
-                printf("Transporte.c (Enviar - Retorno) = > Erro desconhecido\n\n");
+        if (isdigit(dados_aux[0]))
+        {
+            pch = strtok(dados_aux, " ");
 
-            //Reseta os valores
-            segmento_env.tam_buffer = 0;
-            strcpy(segmento_env.buffer, "");
-            buffer_trans_rede_env.retorno = 0;
+            buffer_trans_rede_env.env_no = atoi(pch);
 
-        }
+            pch = strtok(NULL, "");
 
-        //Pega os Dados digitado pelo usuario
-        printf("Transporte.c (Enviar) = > Digite o Conteudo de data: ");
-        fgets(dados_aux, 127, stdin);
-        dados_aux[strlen(dados_aux) - 1] = '\0';
+            strcpy(segmento_env.buffer,pch);
 
-        pch = strtok(dados_aux, ";");
+            //Seta tipo de msg, tamanho da msg e nó para enviar
+            segmento_env.tam_buffer = strlen(segmento_env.buffer);
 
-        printf("nó : %s\n",pch);
-        segmento_env.env_no = atoi(pch);
-
-        pch = strtok(NULL, ";");
-
-        printf("Texto: %s\n",pch);
-        strcpy(segmento_env.buffer,pch);
-
-        //Seta tipo de msg, tamanho da msg e nó para enviar
-        segmento_env.tam_buffer = strlen(segmento_env.buffer);
-
-        //Colocar no Buffer
-        buffer_trans_rede_env.tam_buffer = segmento_env.tam_buffer;
-        buffer_trans_rede_env.env_no = segmento_env.env_no;
-        memcpy(&buffer_trans_rede_env.segmento, &segmento_env, sizeof(segmento_env));
+            //Colocar no Buffer
+            buffer_trans_rede_env.tam_buffer = segmento_env.tam_buffer;
+            memcpy(&buffer_trans_rede_env.data, &segmento_env, sizeof(segmento_env));
+        }else
+            printf("data[0] :'%c' não é um int\n", dados_aux[0]);
 
         //Destrava acesso exclusivo
         pthread_mutex_unlock(&mutex_trans_rede_env3);
 
         //Destrava mutex de sincronismo
         pthread_mutex_unlock(&mutex_trans_rede_env2);
+
+        // TESTE DE RETORNO DA CAMADA DE REDE
+        /*
+        pthread_mutex_lock(&mutex_trans_rede_env1);
+
+        //Testa o retorno da camada de enlace
+        if (buffer_trans_rede_env.retorno == 0) {
+            printf("Transporte.c (Enviar - Retorno) = > OK\n\n");
+        } else if (buffer_trans_rede_env.retorno == -1) {
+            printf("Transporte.c (Enviar - Retorno) = > Não é nó vizinho: '%d'!\n\n", buffer_trans_rede_env.env_no);
+        }else {
+            printf("Transporte.c (Enviar - Retorno) = > Erro fatal(2)\n\n");
+        }
+
+        pthread_mutex_unlock(&mutex_trans_rede_env1);
+        */
 
     }
 
@@ -111,6 +111,8 @@ void *receberSegmentos(){
 
     while (TRUE) {
 
+        struct segmento segmento_rcv;
+
         //Trava mutex de sincronismo
         pthread_mutex_lock(&mutex_trans_rede_rcv2);
 
@@ -119,16 +121,10 @@ void *receberSegmentos(){
 
         if (buffer_trans_rede_rcv.tam_buffer != 0) {
 
-            if (buffer_trans_rede_rcv.retorno == 0)
-            {
-                montarSegmento(&segmento_rcv);
+            montarSegmento(&segmento_rcv);
                 
-                printf("Transporte.c (Receber) = > Tam_buffer: '%d' Bytes, Buffer: '%s'\n", segmento_rcv.tam_buffer,
-                segmento_rcv.buffer);
-            }
-            else if (buffer_trans_rede_rcv.retorno == -1){
-                printf("Transporte.c (Receber) = > ERRO: Datagrama descartado!\n");
-            }
+            printf("Transporte.c (Receber) = > Tam_buffer: '%d' Bytes, Buffer: '%s'\n", segmento_rcv.tam_buffer,
+            segmento_rcv.buffer);
 
         }
         //Libera acesso exclusivo
@@ -140,8 +136,9 @@ void *receberSegmentos(){
 
 }
 
-void montarSegmento(struct segmento *segment);{
+void montarSegmento(struct segmento *segment){
 
-	memcpy(segment, &buffer_trans_rede_rcv.segmento, sizeof (buffer_trans_rede_rcv.segmento));
+	segment->tam_buffer = buffer_trans_rede_rcv.tam_buffer;
+    strcpy(segment->buffer, buffer_trans_rede_rcv.data.buffer);
 
 }

@@ -15,32 +15,37 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+struct segmento {
+    int tam_buffer;
+    char buffer[100];
+};
+
 struct datagrama {
     int type;
     int tam_buffer;
     int offset;
     int id;
-    int tamanho total;
+    int tamanho_total;
     int mf;
-    char buffer[100];
+    struct segmento data;
 };
 
 struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
-    struct datagrama datagrama;
     int retorno;
+    struct datagrama data;
+};
+
+struct frame {
+    int tam_buffer;
+    int ecc;
+    struct datagrama data;
 };
 
 struct file {
     char file_name[20];
     int num_no;
-};
-
-struct frame {
-    int tam_buffer;
-    struct datagrama data;
-    int ecc;
 };
 
 #define DEBBUG_ENLACE
