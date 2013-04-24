@@ -15,6 +15,7 @@
 
 #define TRUE 	1
 #define FALSE	0
+#define MAX_BUFFERS_DESFRAG 5
 
 struct segmento {
     int tam_buffer;
@@ -52,6 +53,11 @@ struct file {
     int num_no;
 };
 
+struct buffer_fragmento {
+    int id;
+    char buffer[1000];
+};
+
 extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 extern struct file file_info;
@@ -62,13 +68,22 @@ extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans
 extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
 
 int id = 0; // Inicializa ID em 0
-int cabecalho_trans = sizeof(int);
+int cabecalho_trans = sizeof(int); // nao utilizado no momento
+struct buffer_fragmento buffers_desfrag[MAX_BUFFERS_DESFRAG];
+
+int i;
+
+for (i = 0; i < MAX_BUFFERS_DESFRAG; ++i)
+{
+    buffers_desfrag[i].id = -1;
+}
 
 void *receberSegmento();
 void *receberDatagramas();
 void fragmentarDatagrama(struct datagrama datagram);
 void enviarDatagrama(struct datagrama datagrama_env);
-void montarDatagramaRcv(struct datagrama *datagram);
+int montarDatagramaRcv(struct datagrama *datagram);
 int retornoEnlace(struct datagrama datagram);
 void enviarSegmento(struct datagrama datagram);
 void montarDatagramaEnv(struct datagrama *datagram);
+void desfragmentarDatagrama(struct datagrama datagram);

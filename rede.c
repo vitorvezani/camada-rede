@@ -10,7 +10,6 @@
 
 #include "headers/rede.h"
 
-
 void *iniciarRede() {
 
     int te, tr;
@@ -77,29 +76,56 @@ void *receberDatagramas() {
 
     while (TRUE) {
 
+    int desfrag;
+
         struct datagrama datagrama_rcv;
 
         //Trava mutex de sincronismo
         pthread_mutex_lock(&mutex_rede_enlace_rcv2);
 
-        //Trava acesso exclusivo
-        pthread_mutex_lock(&mutex_rede_enlace_rcv3);
+            desfrag = montarDatagramaRcv(&datagrama_rcv);
 
-            montarDatagramaRcv(&datagrama_rcv);
+        if (datagrama_rcv.type = 1) // Tipo de Datagrama Normal
+        {
+            if (desfrag)
+            {
+                desfragmentarDatagrama(datagrama_rcv);
 
-        //Libera acesso exclusivo
-        pthread_mutex_unlock(&mutex_rede_enlace_rcv3);
+            }else{
+                        //Destrava mutex de sinconismo
+            pthread_mutex_unlock(&mutex_rede_enlace_rcv1);
 
-        //Destrava mutex de sinconismo
-        pthread_mutex_unlock(&mutex_rede_enlace_rcv1);
+            pthread_mutex_lock(&mutex_trans_rede_rcv1);
 
-        pthread_mutex_lock(&mutex_trans_rede_rcv1);
+                enviarSegmento(datagrama_rcv);
 
-            enviarSegmento(datagrama_rcv);
+            pthread_mutex_unlock(&mutex_trans_rede_rcv2);
+            }
 
-        pthread_mutex_unlock(&mutex_trans_rede_rcv2);
-
+        }else if (datagrama_rcv.type = 2) // tipo de Datagrama de Roteamento
+        {
+            //alimentarTabeladeRotas();
+        }
     }
+}
+
+void desfragmentarDatagrama(struct datagrama datagram){
+    int i;
+
+    for (i = 0; i < MAX_BUFFERS_DESFRAG; ++i)
+    {
+        if (buffers_desfrag[i].id = datagram.id)
+        {
+            //Buffer ja existe para ID
+        }else
+        {
+            //Buffer nao existe para ID
+        }
+    }
+    datagram.tam_buffer;
+    datagram.offset;
+    datagram.id;
+    datagram.tamanho_total;
 }
 
 void fragmentarDatagrama(struct datagrama datagram){
@@ -111,6 +137,7 @@ void fragmentarDatagrama(struct datagrama datagram){
     int MTU = buffer_rede_enlace_env.retorno;
     int tamanho_total = datagram.tam_buffer;
     char buffer_interno[100];
+
     memcpy(buffer_interno,&datagram.data.buffer,100);
 
     write(1,buffer_interno,100);
@@ -226,26 +253,30 @@ void enviarDatagrama(struct datagrama datagrama_env) {
         memcpy(&buffer_rede_enlace_env.data,&datagrama_env, sizeof(datagrama_env));
 }
 
-void montarDatagramaRcv(struct datagrama *datagram){
+int montarDatagramaRcv(struct datagrama *datagram){
 
         if (buffer_rede_enlace_rcv.tam_buffer != 0){
 
-            printf("Rede.c (Receber) = > Datagrama Recebido com sucesso\n");
-
             if (buffer_rede_enlace_rcv.retorno == 0)
             {
+                printf("Rede.c (Receber) = > Datagrama Recebido com sucesso\n");
 
                 memcpy(datagram, &buffer_rede_enlace_rcv.data, sizeof (buffer_rede_enlace_rcv.data));
                 
                 printf("Rede.c (Receber) = > Type: '%d', Tam_buffer: '%d' Bytes, Tam Total: '%d', ID: '%d', offset: '%d', MF: '%d'\n", datagram->type, datagram->tam_buffer,
                 datagram->tamanho_total,datagram->id,datagram->offset,datagram->mf);
 
+                if (datagram->mf != -1) // tem mais fragmentos
+                {
+                    return 1;
+                }
+
             }
             else if (buffer_rede_enlace_rcv.retorno == -1){
                 printf("Rede.c (Receber) = > ERRO: Datagrama corrompido e descartado!\n");
             }
         }
-
+    return 0;    
 }
 
 void enviarSegmento(struct datagrama datagram) {
