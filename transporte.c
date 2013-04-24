@@ -54,9 +54,6 @@ void *enviarSegmentos(){
         fpurge(stdin);
         fflush(stdin);
 
-        //Trava acesso exclusivo
-        pthread_mutex_lock(&mutex_trans_rede_env3);
-
             //Pega os Dados digitado pelo usuario
             printf("Transporte.c (Enviar) = > Digite nó e data: ");
             fgets(dados_aux, 127, stdin);
@@ -80,9 +77,6 @@ void *enviarSegmentos(){
             memcpy(&buffer_trans_rede_env.data, &segmento_env, sizeof(segmento_env));
         }else
             printf("data[0] :'%c' não é um int\n", dados_aux[0]);
-
-        //Destrava acesso exclusivo
-        pthread_mutex_unlock(&mutex_trans_rede_env3);
 
         //Destrava mutex de sincronismo
         pthread_mutex_unlock(&mutex_trans_rede_env2);

@@ -61,9 +61,14 @@ extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2, mutex_red
 extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans_rede_env3;
 extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
 
+int id = 0; // Inicializa ID em 0
+int cabecalho_trans = sizeof(int);
+
 void *receberSegmento();
 void *receberDatagramas();
+void fragmentarDatagrama(struct datagrama datagram);
 void enviarDatagrama(struct datagrama datagrama_env);
 void montarDatagramaRcv(struct datagrama *datagram);
+int retornoEnlace(struct datagrama datagram);
 void enviarSegmento(struct datagrama datagram);
 void montarDatagramaEnv(struct datagrama *datagram);
