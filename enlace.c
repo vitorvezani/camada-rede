@@ -1,7 +1,7 @@
 //
 //  enlace.c
 //
-//  Guilherme Sividal - 09054512 
+//  Guilherme Sividal - 09054512
 //  Vitor Rodrigo Vezani - 10159861
 //
 //  Created by Vitor Vezani on 19/03/13.
@@ -87,16 +87,13 @@ void *enviarFrames(void *param) {
 
         fflush(stdin);
 
-        //Trava acesso exclusivo ao buffer
-        pthread_mutex_lock(&mutex_rede_enlace_env3);
-
         //Loop no ligacao enlaces
         for (i = 0; i < 18; ++i) {
             //Verificar se existe ligacao entre seu nó e o nó destino
             if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])){
 
 #ifdef DEBBUG_ENLACE
-                printf("Enlace.c = > Existe Ligacao nos [Enlaces]\n");
+                printf("[ENLACE] Existe Ligacao nos [Enlaces]\n");
 #endif
 
                 //seta MTU do enlace encontrado
@@ -115,44 +112,44 @@ void *enviarFrames(void *param) {
                         }
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > Existe -> [Nó]: '%d',possui IP: '%s' , Porta: '%d'\n", buffer_rede_enlace_env.env_no, ligacao.nos[i][1], atoi(ligacao.nos[i][2]));
+                        printf("[ENLACE] Existe -> [Nó]: '%d',possui IP: '%s' , Porta: '%d'\n", buffer_rede_enlace_env.env_no, ligacao.nos[i][1], atoi(ligacao.nos[i][2]));
 #endif
 
                         //seta o IP e Porta do nó destino no sockaddr_in 'to'
                         to.sin_family = AF_INET;
-                        to.sin_port = htons(atoi(ligacao.nos[i][2])); // Porta do nó        
-                        to.sin_addr.s_addr = inet_addr(ligacao.nos[i][1]); // Endereço IP do nó  
+                        to.sin_port = htons(atoi(ligacao.nos[i][2])); // Porta do nó
+                        to.sin_addr.s_addr = inet_addr(ligacao.nos[i][1]); // Endereço IP do nó
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > Nó Configurado\n");
+                        printf("[ENLACE] Nó Configurado\n");
 #endif
 
                         //Função que monta o frame
                         montarFrame(&frame_env);
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > Frame Montado! tam_buffer: '%d', tam_data: '%lu', tam_frame: '%lu'\n", frame_env.tam_buffer,
+                        printf("[ENLACE] Frame Montado! tam_buffer: '%d', tam_data: '%lu', tam_frame: '%lu'\n", frame_env.tam_buffer,
                                 sizeof (frame_env.data), sizeof (frame_env));
 #endif
 
                         //Testa tam dos dados vs MTU do nó
                         if (frame_env.tam_buffer > mtu) {
-                            printf("Enlace.c = > Erro de MTU\n");
+                            printf("[ENLACE] Erro de MTU\n");
                             buffer_rede_enlace_env.retorno = mtu;
                             flag = 2;
                             break;
                         }
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > frame_env.tam_buffer: '%d', MTU: '%d'\n", frame_env.tam_buffer, ligacao.enlaces[i][2]);
-#endif	
+                        printf("[ENLACE] frame_env.tam_buffer: '%d', MTU: '%d'\n", frame_env.tam_buffer, ligacao.enlaces[i][2]);
+#endif
 
                         //Funcão do calculo de checksum
                         frame_env.ecc = checkSum(frame_env.data);
 
 #ifdef DEBBUG_ENLACE
-                        printf("Enlace.c = > ECC Calculado! ecc: '%d'\n", frame_env.ecc);
-#endif	
+                        printf("[ENLACE] ECC Calculado! ecc: '%d'\n", frame_env.ecc);
+#endif
 
                         //Setar as variaveis L,C,D do garbler
                         set_garbler(0, 0, 0);
@@ -160,9 +157,9 @@ void *enviarFrames(void *param) {
                         //Funcão que envia para o nó destino o Frame
                         if (sendto_garbled(s, &frame_env, sizeof (frame_env), 0, (struct sockaddr *) &to, sizeof (to)) < 0) {
                             perror("sendto()");
-                            printf("Enlace.c = > Dados não enviados!\n");
+                            printf("[ENLACE] Dados não enviados!\n");
                         } else {
-                            printf("Enlace.c = > Dados enviados!\n");
+                            printf("[ENLACE] Dados enviados!\n");
                             flag = 1;
                         }
 
@@ -179,9 +176,6 @@ void *enviarFrames(void *param) {
         else if (flag == 1) {
             buffer_rede_enlace_env.retorno = 0;
         }
-
-        //Destrava acesso exclusivo ao buffer
-        pthread_mutex_unlock(&mutex_rede_enlace_env3);
 
         //Libera mutex para sincronismo
         pthread_mutex_unlock(&mutex_rede_enlace_env1);
@@ -211,7 +205,7 @@ void *receberFrames(void *param) {
         if (atoi_result == file_info.num_no) {
 
 #ifdef DEBBUG_ENLACE
-            //printf("Enlace.c (server) = > Escutando IP: '%s' Porta: '%s'\n",ligacao.nos[i][1],ligacao.nos[i][2]);
+            //printf("[ENLACE - SERVER] Escutando IP: '%s' Porta: '%s'\n",ligacao.nos[i][1],ligacao.nos[i][2]);
 #endif
 
             //seta o IP e Porta de seu nó no sockaddr_in 'server'
@@ -242,30 +236,24 @@ void *receberFrames(void *param) {
             exit(1);
         }
 
-        //Trava acesso exclusivo ao buffer
-        pthread_mutex_lock(&mutex_rede_enlace_rcv3);
-
-        printf("\nEnlace.c (server)= > Frame Recebido! tam_buffer: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer,
+        printf("\n[ENLACE - SERVER] Frame Recebido! tam_buffer: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer,
                 frame_rcv.ecc, sizeof (frame_rcv.data), sizeof (frame_rcv));
 
         //Monta Datagrama atravez do Frame recebido
         montarBuffer(frame_rcv);
 
-        printf("Enlace.c (server)= > Datagrama Montado!\n");
+        printf("[ENLACE - SERVER] Datagrama Montado!\n");
 
         //Recalculo do ECC do Datagrama montado
         sum = checkSum(frame_rcv.data);
 
-        printf("Enlace.c (server) = > ECC Recalculado -> frame_rcv.ECC:'%d', ECC recalculado: '%d'\n", frame_rcv.ecc, sum);
+        printf("[ENLACE - SERVER] ECC Recalculado -> frame_rcv.ECC:'%d', ECC recalculado: '%d'\n", frame_rcv.ecc, sum);
 
-        //Teste do ECC e retorno para cadamada de testeenlace(rede)
+        //Teste do ECC e retorno para cadamada de rede
         if (frame_rcv.ecc == sum)
             buffer_rede_enlace_rcv.retorno = 0;
-        else 
+        else
             buffer_rede_enlace_rcv.retorno = -1;
-
-        //Libera acesso exclusivo ao buffer
-        pthread_mutex_unlock(&mutex_rede_enlace_rcv3);
 
         //Libera mutex de sincronismo
         pthread_mutex_unlock(&mutex_rede_enlace_rcv2);
@@ -292,7 +280,6 @@ void montarFrame(struct frame *frame) {
 
     memcpy(&frame->data, &buffer_rede_enlace_env.data, sizeof (buffer_rede_enlace_env.data));
 
-    //tam_
     buffer_rede_enlace_env.env_no = -1;
     buffer_rede_enlace_env.retorno = 0;
 

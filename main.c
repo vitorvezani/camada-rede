@@ -1,7 +1,7 @@
 //
 //  main.c
 //
-//  Guilherme Sividal - 09054512 
+//  Guilherme Sividal - 09054512
 //  Vitor Rodrigo Vezani - 10159861
 //
 //  Created by Vitor Vezani on 19/03/13.
@@ -11,7 +11,7 @@
 #include "headers/main.h"
 
 int main(int argc, char const *argv[]) {
-
+int i;
     int te, tr, ttr;
     pthread_t threadIniciaEnlace, threadIniciaRede, threadIniciaTransporte;
 
@@ -25,15 +25,15 @@ int main(int argc, char const *argv[]) {
     strcpy(file_info.file_name, argv[1]);
     file_info.num_no = atoi(argv[2]);
 
-    printf("nome do arquivo: '%s'\n num do nó: '%d'\n", file_info.file_name, file_info.num_no);
-    
+    printf("Nome do arquivo: '%s'\n Numero nó: '%d'\n", file_info.file_name, file_info.num_no);
+
     //inicializacao do buffer Trans->Rede
-    buffer_trans_rede_env.tam_buffer = 0;
-    buffer_trans_rede_rcv.tam_buffer = 0;
+    buffer_trans_rede_env.tam_buffer = -1;
+    buffer_trans_rede_rcv.tam_buffer = -1;
 
     //inicializacao do buffer Rede->Enlace
-    buffer_rede_enlace_env.tam_buffer = 0;
-    buffer_rede_enlace_rcv.tam_buffer = 0;
+    buffer_rede_enlace_env.tam_buffer = -1;
+    buffer_rede_enlace_rcv.tam_buffer = -1;
 
     //Inicializar Mutex Rede->Enlace Enviar
     pthread_mutex_init(&mutex_rede_enlace_env1, NULL);
@@ -54,7 +54,6 @@ int main(int argc, char const *argv[]) {
     //Inicializar Mutex Interno Rede
     //pthread_mutex_init(&mutex_rede1, NULL);
     //pthread_mutex_init(&mutex_rede2, NULL);
-
 
     //Inicia a thread iniciarEnlace
     te = pthread_create(&threadIniciaEnlace, NULL, iniciarEnlace, NULL);

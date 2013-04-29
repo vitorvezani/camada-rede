@@ -1,7 +1,7 @@
 //
 //  main.h
 //
-//  Guilherme Sividal - 09054512 
+//  Guilherme Sividal - 09054512
 //  Vitor Rodrigo Vezani - 10159861
 //
 //  Created by Vitor Vezani on 19/03/13.
@@ -53,10 +53,10 @@ struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 
 struct file file_info;
 
-pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2, mutex_rede_enlace_env3;
-pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2, mutex_rede_enlace_rcv3;
-pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans_rede_env3;
-pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
+pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
+pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3 ;
+pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2,mutex_trans_rede_env3;
+pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_rede_rcv3;
 
 void *iniciarTransporte();
 void *iniciarEnlace();

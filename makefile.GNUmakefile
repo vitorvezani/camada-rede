@@ -1,4 +1,4 @@
-#
+	#
 #	makefile.GNUmakefile
 #
 #  Guilherme Sividal - 09054512 
@@ -10,6 +10,6 @@
 
 all:
 	gcc -c main.c arquivo.c enlace.c rede.c transporte.c garbler.c
-	gcc -o meuprog main.o enlace.o rede.o arquivo.o transporte.o garbler.o
+	gcc -o meuprog main.o enlace.o rede.o transporte.o arquivo.o garbler.o
 clean:
 	rm -f .o

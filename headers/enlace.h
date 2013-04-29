@@ -59,8 +59,8 @@ struct file {
 extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct file file_info;
 
-extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2, mutex_rede_enlace_env3;
-extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2, mutex_rede_enlace_rcv3;
+extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
+extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3;
 
 void colocarArquivoStruct(FILE * fp, struct ligacoes * ligacao);
 void retirarEspaco(char * string);
