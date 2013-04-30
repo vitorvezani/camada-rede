@@ -64,8 +64,8 @@ extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede
 
 void colocarArquivoStruct(FILE * fp, struct ligacoes * ligacao);
 void retirarEspaco(char * string);
-void montarFrame(struct frame *frame);
-void montarBuffer(struct frame frame);
+void colocarBufferFrame(struct frame *frame);
+void colocarDatagramaBuffer(struct frame frame);
 void *enviarFrames(void *param);
 void *receberFrames(void *param);
 int checkSum(struct datagrama datagram);

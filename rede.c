@@ -15,11 +15,11 @@ void *iniciarRede() {
     int te, tr, i;
     pthread_t threadReceberSegmento, threadReceberDatagramas;
 
-    //inicializacao do buffer
+    /*  inicializacao do buffer */
     for(i = 0; i<MAX_BUFFERS_DESFRAG; i++)
         buffers_fragmentacao[i].id = -1;
 
-    //Inicia a thread receberSegmento
+    /* Inicia a thread receberSegmento */
     te = pthread_create(&threadReceberSegmento, NULL, receberSegmento, NULL);
 
     if (te) {
@@ -27,7 +27,7 @@ void *iniciarRede() {
         exit(-1);
     }
 
-    //Inicia a thread receberDatagramas
+    /* Inicia a thread receberDatagramas */
     tr = pthread_create(&threadReceberDatagramas, NULL, receberDatagramas, NULL);
 
     if (tr) {
@@ -35,45 +35,46 @@ void *iniciarRede() {
         exit(-1);
     }
 
-    //Espera as threads terminarem
+    /* Espera as threads terminarem */
     pthread_join(threadReceberSegmento, NULL);
     pthread_join(threadReceberDatagramas, NULL);
 }
 
 void *receberSegmento() {
 
-    int MTU;
+    int MTU = 0;
 
     while (1) {
 
         struct datagrama datagrama_env;
 
-        //Consumir buffer_trans_rede_env
+        /* Consumir buffer_trans_rede_env */
         pthread_mutex_lock(&mutex_trans_rede_env2);
 
             montarDatagramaEnv(&datagrama_env);
 
-        //Consumir buffer_trans_rede_env
+        /* Consumir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_trans_rede_env1);
 
-        //Produzir buffer_trans_rede_env
+        /* Produzir buffer_trans_rede_env */
         pthread_mutex_lock(&mutex_rede_enlace_env1);
 
             enviarDatagrama(datagrama_env);
 
-        //Produzir buffer_trans_rede_env
+        /* Produzir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_rede_enlace_env2);
 
-        //Consome resposta da camada de enlace
+        /* Consome resposta da camada de enlace */
         pthread_mutex_lock(&mutex_rede_enlace_env1);
 
             MTU = retornoEnlace(datagrama_env);
 
-        //Consome resposta da camada de enlace
+        /* Consome resposta da camada de enlace */
         pthread_mutex_unlock(&mutex_rede_enlace_env1);
 
-            if (MTU > 0)
-                fragmentarDatagrama(datagrama_env);
+        /* É necessario fragmentar o datagrama? */
+        if (MTU > 0)
+            fragmentarDatagrama(datagrama_env);
 
     }
 }
@@ -82,47 +83,51 @@ void *receberDatagramas() {
 
     int desfrag;
     int i = 0;
-    int index;
+    int index; // vetor de index?
 
     while (TRUE) {
 
         struct datagrama datagrama_rcv;
 
-        //Consumir buffer_rede_enlace_rcv
+        /* Consumir buffer_rede_enlace_rcv */
         pthread_mutex_lock(&mutex_rede_enlace_rcv2);
 
+            /* Retira datagrama do buffer, retona se é necessario desfragmentar */
             desfrag = montarDatagramaRcv(&datagrama_rcv);
 
-        //Consumir buffer_rede_enlace_rcv
+        /* Consumir buffer_rede_enlace_rcv */
         pthread_mutex_unlock(&mutex_rede_enlace_rcv1);
 
-        if (datagrama_rcv.type == 1) // Tipo de Datagrama Normal
+        /* É um datagrama IP? */
+        if (datagrama_rcv.type == 1)
         {
-
+            /* É necessario desfragmentar o datagrama? */
             if (desfrag)
-            {
                 desfragmentarDatagrama(datagrama_rcv, &index);
 
-            }
-
-            //Produzir buffer_trans_rede_rcv
+            /* Produzir buffer_trans_rede_rcv */
             pthread_mutex_lock(&mutex_trans_rede_rcv1);
 
+            /* É um datagrama unico? */
             if(datagrama_rcv.mf == -1){
 
+                /* Coloca no buffer_trans_rede_rcv */
                 enviarSegmento(datagrama_rcv);
 
+            /* É o ultimo datagrama a ser framentado? */
             }else if(datagrama_rcv.mf == 2){
 
+                /* Coloca no buffer_trans_rede_rcv */
                 enviarSegmento(buffers_fragmentacao[index]);
             }
 
-            //Produzir buffer_trans_rede_rcv
+            /* Produzir buffer_trans_rede_rcv */
             pthread_mutex_unlock(&mutex_trans_rede_rcv2);
 
-        }else if (datagrama_rcv.type == 2) // tipo de Datagrama de Roteamento
+        /* É um datagrama de roteamento? */
+        }else if (datagrama_rcv.type == 2)
         {
-            //alimentarTabeladeRotas();
+            // alimentarTabeladeRotas();
         }
     }
 }
@@ -130,13 +135,15 @@ void *receberDatagramas() {
 void desfragmentarDatagrama(struct datagrama datagram, int *index){
     int i;
     int flag = -1;
-
-    //Implementar MUTEX buffers_fragmentacao[i]
-
-    write(1,&datagram.data,datagram.tam_buffer);
     void *aux;
 
+    /* Implementar MUTEX buffers_fragmentacao[i] */
+
+    write(1,&datagram.data,datagram.tam_buffer);
+
     for (i = 0; i < MAX_BUFFERS_DESFRAG; ++i) {
+
+        /* Há datagramas anteriores com o mesmo id? */
         if (buffers_fragmentacao[i].id == datagram.id)
         {
             flag = i;
@@ -145,20 +152,24 @@ void desfragmentarDatagrama(struct datagrama datagram, int *index){
     }
     if (flag == -1){
 		for(i = 0; i < MAX_BUFFERS_DESFRAG; ++i) {
-			if(buffers_fragmentacao[i].id == -1 && i != 0) {
-				buffers_fragmentacao[i].id = datagram.id;
-                printf("[DESFRAG] Primeiro datagrama na posicao :'%d'\n",i);
-				memcpy(&buffers_fragmentacao[i].data + datagram.offset,&datagram.data, datagram.tam_buffer);
+
+            /* Não há datagramas anteriores, ache a primeira posicao vazia */
+			if(buffers_fragmentacao[i].id == -1) {
+				flag = i;
 				break;
 			}
 		}
-	}else{
-        printf("[DESFRAG] Demais datagrama na posicao :'%d'\n",flag);
-	    *index = flag;
-        aux = &buffers_fragmentacao[i].data;
-        aux += datagram.offset;
-	    memcpy(aux, &datagram.data, datagram.tam_buffer);
 	}
+
+    /* index = flag */
+    *index = flag;
+    /* ponteiro recebe posicao de memoria */
+    aux = &buffers_fragmentacao[i].data;
+    /* pronteiro soma offset */
+    aux += datagram.offset;
+    /* copia conteudo do datagrama para posicao de memoria apontado por aux, tamanho de tam_buffer */
+    memcpy(aux, &datagram.data, datagram.tam_buffer);
+
 }
 
 void fragmentarDatagrama(struct datagrama datagram){
@@ -173,27 +184,27 @@ void fragmentarDatagrama(struct datagrama datagram){
     int MTU = buffer_rede_enlace_env.retorno;                                           //MTU
     char buffer_interno[tam_total_datagrama];                                         	//Buffer carrega o datagrama
 
+    /* Copia conteudo para o buffer */
     memcpy(buffer_interno,&datagram.data,tam_total_datagrama);
-
-#ifdef DEBBUG_REDE_FRAGMENTAR
-    write(1, buffer_interno ,tam_total_datagrama);
-#endif
 
     void *ptr = buffer_interno;
 
         printf("[REDE - FRAG] MTU excedido dividindo o pacote em max '%d' bytes\n\n", MTU);
 
+        /* Se o ultimo datagrama tiver resto */
         if (tam_total_datagrama % MTU != 0){
             qtde_divisao = (tam_total_datagrama) / MTU + 1;
             tam_parte_final = (tam_total_datagrama) % MTU;
             printf("[REDE - FRAG] Tamanho total : '%d'.Dividirei em '%d' partes\n",(tam_total_datagrama), qtde_divisao);
         }
+        /* Se o ultimo datagrama não tiver resto */
         else{
             qtde_divisao = tam_total_datagrama / MTU;
             tam_parte_final = 0;
             printf("[REDE - FRAG] Tamanho total : '%d'.Dividirei o datagrama em '%d' partes\n",(tam_total_datagrama), qtde_divisao);
         }
 
+        /* Loop para mandar os fragmentos dos datagramas*/
         for (i = 0; i < qtde_divisao; i++)
         {
             struct datagrama datagrama_env_aux;
@@ -206,65 +217,72 @@ void fragmentarDatagrama(struct datagrama datagram){
 
             printf("[REDE - FRAG] Offset: '%d'\n",datagrama_env_aux.offset);
 
-            if (i + 1 != qtde_divisao) //Primeiro e Demais pacotes (exceto ultimo)
+            /* Primeiro e Demais pacotes (exceto ultimo) */
+            if (i + 1 != qtde_divisao) 
             {
-                datagrama_env_aux.tam_buffer = MTU; //Atualiza Tam_buffer
-                datagrama_env_aux.mf = 1; //More Fragments
+                datagrama_env_aux.tam_buffer = MTU; // Atualiza Tam_buffer
+                datagrama_env_aux.mf = 1; // More Fragments
 
-                memcpy(&datagrama_env_aux.data, ptr , MTU); //Copia Dados em Datagrama Auxiliar
+                memcpy(&datagrama_env_aux.data, ptr , MTU); // Copia Dados em Datagrama Auxiliar
 
                 #ifdef DEBBUG_REDE_FRAGMENTAR
-                    write(1,ptr,MTU); // Printa o que enviou
+                    write(1,ptr,MTU); //  Printa o que enviou
                 #endif
 
-                offset += MTU;  //Atualiza Offset
-                ptr += MTU;     //Move Ponteiro
+                offset += MTU;  // Atualiza Offset
+                ptr += MTU;     // Move Ponteiro
             }
 
-            else if (i + 1 == qtde_divisao && tam_parte_final == 0) //se for o ultimo pacote e nao tem sobra
+            /* Se for o ultimo pacote e nao tem sobra */
+            else if (i + 1 == qtde_divisao && tam_parte_final == 0) 
             {
-                datagrama_env_aux.tam_buffer = MTU; //Atualiza Tam_buffer
-                datagrama_env_aux.mf = 2; //More Fragments
+                datagrama_env_aux.tam_buffer = MTU; // Atualiza Tam_buffer
+                datagrama_env_aux.mf = 2; // More Fragments
 
-                memcpy(&datagrama_env_aux.data, ptr , MTU); //Copia Dados em Datagrama Auxiliar
+                /* Copia Dados em Datagrama Auxiliar */
+                memcpy(&datagrama_env_aux.data, ptr , MTU);
 
                 #ifdef DEBBUG_REDE_FRAGMENTAR
-                    write(1,ptr,MTU); // Printa o que enviou
+                    write(1,ptr,MTU); //Printa o que enviou
                 #endif
             }
 
-            else if(i + 1 == qtde_divisao && tam_parte_final != 0)//se for o ultimo pacote e tem sobra
+            /* Se for o ultimo pacote e tem sobra */
+            else if(i + 1 == qtde_divisao && tam_parte_final != 0)
             {
-                datagrama_env_aux.tam_buffer = tam_parte_final; //Atualiza Tam_buffer
-                datagrama_env_aux.mf = 2; //More Fragments
+                datagrama_env_aux.tam_buffer = tam_parte_final; // Atualiza Tam_buffer
+                datagrama_env_aux.mf = 2; // More Fragments
 
-                memcpy(&datagrama_env_aux.data, ptr , tam_parte_final); //Copia Dados em Datagrama Auxiliar
+                memcpy(&datagrama_env_aux.data, ptr , tam_parte_final); // Copia Dados em Datagrama Auxiliar
 
                 #ifdef DEBBUG_REDE_FRAGMENTAR
                     write(1,ptr,tam_parte_final); // Printa o que enviou
                 #endif
             }
 
-            else // Qualqr outro >erro fatal<
+            /*  Qualqr outro >erro fatal<  */
+            else
             {
-                printf("[REDE - FRAG] Erro Fatal(2)\n\n"); // Estrouro de Excessão
+                printf("[REDE - FRAG] Erro Fatal(2)\n\n"); //  Estrouro de Excessão
                 exit(2);
             }
 
-            //Produzir buffer_trans_rede_env
+            /* Produzir buffer_trans_rede_env */
             pthread_mutex_lock(&mutex_rede_enlace_env1);
 
+                /* Coloca Datagrama no buffer_trans_rede_env */
                 enviarDatagrama(datagrama_env_aux);
 
-            //Produzir buffer_trans_rede_env
+            /* Produzir buffer_trans_rede_env */
             pthread_mutex_unlock(&mutex_rede_enlace_env2);
 
-            //Consome resposta da camada de enlace
+            /* Consome resposta da camada de enlace */
             pthread_mutex_lock(&mutex_rede_enlace_env1);
 
+                /* Testa retorno */
                 retornoEnlace(datagrama_env_aux);
 
-            //Consome resposta da camada de enlace
+            /* Consome resposta da camada de enlace */
             pthread_mutex_unlock(&mutex_rede_enlace_env1);
         }
 }
@@ -273,7 +291,7 @@ int retornoEnlace(struct datagrama datagrama_env) {
 
     if (buffer_rede_enlace_env.tam_buffer != -1)
     {
-        //Testa o retorno da camada de enlace
+        /* Testa o retorno da camada de enlace */
         if (buffer_rede_enlace_env.retorno == 0) {
         printf("[REDE - ENVIAR] OK\n\n");
         } else if (buffer_rede_enlace_env.retorno == -1) {
@@ -285,8 +303,8 @@ int retornoEnlace(struct datagrama datagrama_env) {
         printf("[REDE - ENVIAR] Erro Fatal(1)\n\n");
         exit(1);
         }
-        return 0;
     }
+    return 0;
 }
 
 void enviarDatagrama(struct datagrama datagrama_env) {
@@ -311,7 +329,8 @@ int montarDatagramaRcv(struct datagrama *datagram){
 				printf("[REDE - RECEBER] Type: '%d', Tam_buffer: '%d' Bytes, ID: '%d', offset: '%d', MF: '%d'\n", datagram->type, datagram->tam_buffer,
 				datagram->id,datagram->offset,datagram->mf);
 
-				if (datagram->mf > 0) // tem mais fragmentos
+                /* Tem mais fragmentos */
+				if (datagram->mf > 0)
 				{
 					return 1;
 				}
@@ -337,7 +356,7 @@ void montarDatagramaEnv(struct datagrama *datagram){
     datagram->tam_buffer = buffer_trans_rede_env.tam_buffer;
     datagram->id = id;
     datagram->offset = -1;
-    datagram->mf = -1; //More Fragments
+    datagram->mf = -1;
 
     id++;
 }
