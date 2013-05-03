@@ -17,8 +17,11 @@
 #define FALSE	0
 #define MAX_BUFFERS_DESFRAG 5
 
-#define DEBBUG_REDE_FRAGMENTAR
-#define DEBBUG_REDE_DESFRAGMENTAR
+#define INFINITO 999999
+
+//#define DEBBUG_REDE_FRAGMENTAR
+//#define DEBBUG_REDE_DESFRAGMENTAR
+//#define DEBBUG_MONTAR_TABELA_INICIAL
 
 struct segmento {
     int tam_buffer;
@@ -56,9 +59,14 @@ struct file {
     int num_no;
 };
 
+struct tabela_rotas{
+    int tabela[7][7];
+};
+
 extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 extern struct file file_info;
+extern struct ligacoes ligacao;
 
 extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
 extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3 ;
@@ -68,13 +76,21 @@ extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_
 int id = 1; // Inicializa ID em 1
 
 struct datagrama buffers_fragmentacao[MAX_BUFFERS_DESFRAG];
+struct tabela_rotas routetable;
 
-void *receberSegmento();
+//Threads
+void *enviarTabelaRotas();
+void *receberTabelaRotas();
 void *receberDatagramas();
+void *receberSegmento();
+
+//Funcoes
 void fragmentarDatagrama(struct datagrama datagram);
 void enviarDatagrama(struct datagrama datagrama_env);
-int montarDatagramaRcv(struct datagrama *datagram);
+void montarDatagramaRcv(struct datagrama *datagram);
 int retornoEnlace(struct datagrama datagram);
 void enviarSegmento(struct datagrama datagram);
 void montarDatagramaEnv(struct datagrama *datagram);
+void resetarBuffer(struct datagrama *datagram);
 void desfragmentarDatagrama(struct datagrama datagram, int *index);
+void montarTabelaRotasInicial();

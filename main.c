@@ -9,9 +9,10 @@
 //
 
 #include "headers/main.h"
+#include "headers/arquivo.h"
 
 int main(int argc, char const *argv[]) {
-int i;
+    int i,j;
     int te, tr, ttr;
     pthread_t threadIniciaEnlace, threadIniciaRede, threadIniciaTransporte;
 
@@ -26,14 +27,6 @@ int i;
     file_info.num_no = atoi(argv[2]);
 
     printf("Nome do arquivo: '%s'\n Numero nó: '%d'\n", file_info.file_name, file_info.num_no);
-
-    /* inicializacao do buffer Trans->Rede */
-    buffer_trans_rede_env.tam_buffer = -1;
-    buffer_trans_rede_rcv.tam_buffer = -1;
-
-    /* inicializacao do buffer Rede->Enlace */
-    buffer_rede_enlace_env.tam_buffer = -1;
-    buffer_rede_enlace_rcv.tam_buffer = -1;
 
     /* Inicializar Mutex Rede->Enlace Enviar */
     pthread_mutex_init(&mutex_rede_enlace_env1, NULL);
@@ -55,6 +48,21 @@ int i;
     //pthread_mutex_init(&mutex_rede1, NULL);
     //pthread_mutex_init(&mutex_rede2, NULL);
 
+    //Inicialização de Mutex Consumidores
+    pthread_mutex_lock(&mutex_rede_enlace_rcv2);
+    pthread_mutex_lock(&mutex_rede_enlace_env2);
+    pthread_mutex_lock(&mutex_trans_rede_env2);
+    pthread_mutex_lock(&mutex_trans_rede_rcv2);
+
+        /* Inicializacao das estrutura ligacao */
+    for (i = 0; i < 18; ++i)
+        for (j = 0; j < 3; ++j)
+            ligacao.enlaces[i][j] = -1;
+
+    for (i = 0; i < 6; ++i)
+        for (j = 0; j < 3; ++j)
+            strcpy(ligacao.nos[i][j], "-1");
+
     /* Inicia a thread iniciarEnlace */
     te = pthread_create(&threadIniciaEnlace, NULL, iniciarEnlace, NULL);
 
@@ -63,7 +71,7 @@ int i;
         exit(-1);
     }
 
-    usleep(800);
+    usleep(10000);
 
     /* Inicia a thread iniciarRede */
     tr = pthread_create(&threadIniciaRede, NULL, iniciarRede, NULL);
@@ -73,7 +81,7 @@ int i;
         exit(-1);
     }
 
-    usleep(800);
+    usleep(10000);
 
     /* Inicia a thread iniciarTransporte */
     ttr = pthread_create(&threadIniciaTransporte, NULL, iniciarTransporte, NULL);

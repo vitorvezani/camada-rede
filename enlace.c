@@ -19,13 +19,6 @@ void *iniciarEnlace() {
 
     pthread_t threadEnviarFrames, threadReceberFrames;
 
-    struct ligacoes ligacao;
-
-    /* Inicializacao das estrutura ligacao */
-    for (i = 0; i < 18; ++i)
-        for (j = 0; j < 3; ++j)
-            ligacao.enlaces[i][j] = 0;
-
     FILE * fp;
     fp = fopen(file_info.file_name, "r");
 
@@ -35,10 +28,10 @@ void *iniciarEnlace() {
     }
 
     /*Funcão que coloca o arquivo na estrutura ligacao */
-    colocarArquivoStruct(fp, &ligacao);
+    colocarArquivoStruct(fp);
 
     /*Inicia a thread enviarFrames */
-    te = pthread_create(&threadEnviarFrames, NULL, enviarFrames, (void *) &ligacao);
+    te = pthread_create(&threadEnviarFrames, NULL, enviarFrames, NULL);
 
     if (te) {
         printf("ERRO: impossivel criar a thread : Enviar Pacote\n");
@@ -46,7 +39,7 @@ void *iniciarEnlace() {
     }
 
     /*Inicia a thread ReceberFrames */
-    tr = pthread_create(&threadReceberFrames, NULL, receberFrames, (void *) &ligacao);
+    tr = pthread_create(&threadReceberFrames, NULL, receberFrames, NULL);
 
     if (tr) {
         printf("ERRO: impossivel criar a thread : Receber Pacote\n");
@@ -58,11 +51,7 @@ void *iniciarEnlace() {
     pthread_join(threadReceberFrames, NULL);
 }
 
-void *enviarFrames(void *param) {
-
-    struct ligacoes *ligacaoo = (struct ligacoes *) param;
-
-    struct ligacoes ligacao = *ligacaoo;
+void *enviarFrames() {
 
     int i, j;
 
@@ -84,12 +73,10 @@ void *enviarFrames(void *param) {
         /*trava mutex de sincronismo */
         pthread_mutex_lock(&mutex_rede_enlace_env2);
 
-        fflush(stdin);
-
         /*Loop no ligacao enlaces */
         for (i = 0; i < 18; ++i) {
             /*Verificar se existe ligacao entre seu nó e o nó destino */
-            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])){
+            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])) {
 
 #ifdef DEBBUG_ENLACE
                 printf("[ENLACE] Existe Ligacao nos [Enlaces]\n");
@@ -171,8 +158,7 @@ void *enviarFrames(void *param) {
 
         if (flag == 0) {
             buffer_rede_enlace_env.retorno = -1;
-        }
-        else if (flag == 1) {
+        } else if (flag == 1) {
             buffer_rede_enlace_env.retorno = 0;
         }
 
@@ -181,11 +167,7 @@ void *enviarFrames(void *param) {
     }
 }
 
-void *receberFrames(void *param) {
-
-    struct ligacoes *ligacaoo = (struct ligacoes *) param;
-
-    struct ligacoes ligacao = *ligacaoo;
+void *receberFrames() {
 
     int i, atoi_result, s, from_address_size;
     struct sockaddr_in from, server;

@@ -12,7 +12,7 @@
 
 void *iniciarTransporte() {
 
-	int te, tr;
+    int te, tr;
     pthread_t threadEnviarSegmentos, threadReceberSegmentos;
 
     //Inicia a thread enviarDatagramas
@@ -37,30 +37,26 @@ void *iniciarTransporte() {
 
 }
 
-void *enviarSegmentos(){
+void *enviarSegmentos() {
 
-	char dados_aux[128];
+    char dados_aux[128];
     char *pch;
 
     while (1) {
 
         struct segmento segmento_env;
 
-        usleep(300);
-
-        fpurge(stdin);
-        fflush(stdin);
-
         //Pega os Dados digitado pelo usuario
         printf("[TRANS - ENVIAR] Digite nó e data: ");
+        fflush(stdout);
+        fpurge(stdin);
         fgets(dados_aux, 127, stdin);
         dados_aux[strlen(dados_aux) - 1] = '\0';
 
-        if (isdigit(dados_aux[0]))
-        {
+        if (isdigit(dados_aux[0])) {
+
             //Trava o Mutex de sincronismo
             pthread_mutex_lock(&mutex_trans_rede_env1);
-
 
             pch = strtok(dados_aux, " ");
 
@@ -68,19 +64,19 @@ void *enviarSegmentos(){
 
             pch = strtok(NULL, "");
 
-            strcpy(segmento_env.buffer,pch);
+            strcpy(segmento_env.buffer, pch);
 
             //Seta tipo de msg, tamanho da msg e nó para enviar
             segmento_env.tam_buffer = strlen(segmento_env.buffer);
 
             //Colocar no Buffer
             buffer_trans_rede_env.tam_buffer = segmento_env.tam_buffer;
-            memcpy(&buffer_trans_rede_env.data, &segmento_env, sizeof(segmento_env));
+            memcpy(&buffer_trans_rede_env.data, &segmento_env, sizeof (segmento_env));
 
             //Destrava mutex de sincronismo
             pthread_mutex_unlock(&mutex_trans_rede_env2);
 
-        }else
+        } else
             printf("[TRANS - ENVIAR] data[0] :'%c' não é um int\n", dados_aux[0]);
 
         // TESTE DE RETORNO DA CAMADA DE REDE
@@ -97,13 +93,13 @@ void *enviarSegmentos(){
         }
 
         pthread_mutex_unlock(&mutex_trans_rede_env1);
-        */
+         */
 
     }
 
 }
 
-void *receberSegmentos(){
+void *receberSegmentos() {
 
     while (TRUE) {
 
@@ -117,7 +113,7 @@ void *receberSegmentos(){
             montarSegmento(&segmento_rcv);
 
             printf("[TRANS - RECEBER] Tam_buffer: '%d' Bytes, Buffer: '%s'\n", segmento_rcv.tam_buffer,
-            segmento_rcv.buffer);
+                    segmento_rcv.buffer);
 
         }
 
@@ -127,9 +123,9 @@ void *receberSegmentos(){
 
 }
 
-void montarSegmento(struct segmento *segment){
+void montarSegmento(struct segmento *segment) {
 
-	segment->tam_buffer = buffer_trans_rede_rcv.data.tam_buffer;
+    segment->tam_buffer = buffer_trans_rede_rcv.data.tam_buffer;
     strcpy(segment->buffer, buffer_trans_rede_rcv.data.buffer);
 
 }

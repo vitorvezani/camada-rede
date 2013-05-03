@@ -12,18 +12,17 @@
 
 //FUNCOES DE ARQUIVO DA CAMADA DE ENLACE
 
-void colocarArquivoStruct(FILE * fp, struct ligacoes *ligacao) {
+void colocarArquivoStruct(FILE * fp) {
 
     size_t len = 100;
     char *linha = malloc(len);
     char *pch;
-    int j, i,k = 0;
+    int j, i, k = 0;
     int troca_i;
     int lendo = 0;
     int numbers[6][2];
 
-    for (i = 0; i < MAXNOS; i++)
-    {
+    for (i = 0; i < MAXNOS; i++) {
         numbers[i][0] = 0;
         numbers[i][1] = 0;
     }
@@ -41,7 +40,7 @@ void colocarArquivoStruct(FILE * fp, struct ligacoes *ligacao) {
                 delete_espace(pch);
 
                 if (strcmp(pch, "[Nos]") == 0) {
-#ifdef DEBBUG
+#ifdef DEBBUG_ARQUIVO
                     printf("\nTabela de nós\n");
 #endif
                     lendo = NOS;
@@ -49,7 +48,7 @@ void colocarArquivoStruct(FILE * fp, struct ligacoes *ligacao) {
                 }
 
                 if (strcmp(pch, "[Enlaces]") == 0) {
-#ifdef DEBBUG
+#ifdef DEBBUG_ARQUIVO
                     printf("\nTabela de enlaces\n");
 #endif
                     lendo = ENLACES;
@@ -59,52 +58,47 @@ void colocarArquivoStruct(FILE * fp, struct ligacoes *ligacao) {
                 if (strcmp(pch, "[Nos]") != 0 && strcmp(pch, "[Enlaces]") != 0) {
                     if (lendo == NOS) {
 
-                        strcpy(ligacao->nos[i][j], pch);
-#ifdef DEBBUG
-                        printf("nos[%d][%d] '%s' | ", i, j, ligacao->nos[i][j]);
+                        strcpy(ligacao.nos[i][j], pch);
+#ifdef DEBBUG_ARQUIVO
+                        printf("nos[%d][%d] '%s' | ", i, j, ligacao.nos[i][j]);
 #endif
 
                         //Achar MAX de 6 nós
-                        if (i >= 6)
-                        {
+                        if (i >= 6) {
                             printf("\nLimite de 6 nós atingidos\n");
                             exit(1);
                         }
                         //Matriz auxiliar para descobrir Maximo de 3 enlaces
-                        if (j == 0)
-                        {
+                        if (j == 0) {
                             numbers[i][0] = atoi(pch);
                         }
 
                         troca_i++;
                     } else if (lendo = ENLACES) {
 
-                    ligacao->enlaces[i][j] = atoi(pch);
+                        ligacao.enlaces[i][j] = atoi(pch);
 
-                    //Achar + de 3 enlaces
-                    if (j == 0)
-                    {
-                        for (k = 0; k < MAXNOS; k++){
-                        if (numbers[k][0] == ligacao->enlaces[i][0])
-                        {
-                            numbers[k][1] += 1;
-                            if (numbers[k][1] > 3)
-                            {
-                                printf("\nNó '%d' possue '%d' enlaces!\n",numbers[k][0],numbers[k][1]);
-                                exit(1);
+                        //Achar + de 3 enlaces
+                        if (j == 0) {
+                            for (k = 0; k < MAXNOS; k++) {
+                                if (numbers[k][0] == ligacao.enlaces[i][0]) {
+                                    numbers[k][1] += 1;
+                                    if (numbers[k][1] > 3) {
+                                        printf("\nNó '%d' possue '%d' enlaces!\n", numbers[k][0], numbers[k][1]);
+                                        exit(1);
+                                    }
+                                }
                             }
                         }
-                    }
-                    }
 
-#ifdef DEBBUG
-                        printf("enlace[%d][%d] '%d' | ", i, j, ligacao->enlaces[i][j]);
+#ifdef DEBBUG_ARQUIVO
+                        printf("enlace[%d][%d] '%d' | ", i, j, ligacao.enlaces[i][j]);
 #endif
                         troca_i++;
                     }
                     if (troca_i == 3) {
                         i++;
-#ifdef DEBBUG
+#ifdef DEBBUG_ARQUIVO
                         printf("\n");
 #endif
                     }

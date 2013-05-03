@@ -15,6 +15,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#define TRUE            1
+#define FALSE           0
+
+#define NOS             1
+#define ENLACES         2
+
+//#define DEBBUG_ENLACE
+
 struct segmento {
     int tam_buffer;
     char buffer[100];
@@ -48,24 +56,18 @@ struct file {
     int num_no;
 };
 
-#define DEBBUG_ENLACE
-
-#define TRUE 			1
-#define FALSE 			0
-
-#define NOS 			1
-#define ENLACES 		2
-
 extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct file file_info;
+
+extern struct ligacoes ligacao;
 
 extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
 extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3;
 
-void colocarArquivoStruct(FILE * fp, struct ligacoes * ligacao);
+void colocarArquivoStruct(FILE * fp);
 void retirarEspaco(char * string);
 void colocarBufferFrame(struct frame *frame);
 void colocarDatagramaBuffer(struct frame frame);
-void *enviarFrames(void *param);
-void *receberFrames(void *param);
+void *enviarFrames();
+void *receberFrames();
 int checkSum(struct datagrama datagram);
