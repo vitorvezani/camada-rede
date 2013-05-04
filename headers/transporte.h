@@ -16,9 +16,11 @@
 #define TRUE 	1
 #define FALSE	0
 
+#define TAM_MAX_BUFFER 1400
+
 struct segmento {
     int tam_buffer;
-    char buffer[100];
+    char buffer[TAM_MAX_BUFFER];
 };
 
 struct buffer_trans_rede {

@@ -8,13 +8,13 @@
 //  Copyright (c) 2013 Vitor Vezani. All rights reserved.
 //
 
-#include "headers/rede.h"
 #include "headers/arquivo.h"
+#include "headers/rede.h"
 
 void *iniciarRede() {
 
-    int te, tr, tetr, trtr, i;
-    pthread_t threadReceberSegmento, threadReceberDatagramas, threadEnviarTabelaRotas, threadReceberTabelaRotas;
+    int te, tr, tetr, trtr, ted, tes, i;
+    pthread_t threadReceberSegmento, threadReceberDatagramas, threadEnviarTabelaRotas, threadReceberTabelaRotas, threadEnviarDatagrama, threadEnviarSegmento;
 
     /* inicializacao do buffer */
     for (i = 0; i < MAX_BUFFERS_DESFRAG; i++)
@@ -23,11 +23,19 @@ void *iniciarRede() {
     /* Inicializa topologia da rede*/
     montarTabelaRotasInicial();
 
-    /* Inicia a thread EnviarTabelaRotas */
-    tetr = pthread_create(&threadEnviarTabelaRotas, NULL, enviarTabelaRotas, NULL);
+    /* Inicia a thread threadReceberSegmento */
+    te = pthread_create(&threadReceberSegmento, NULL, receberSegmento, NULL);
 
-    if (tetr) {
-        printf("ERRO: impossivel criar a thread : enviarTabelaRotas\n");
+    if (te) {
+        printf("ERRO: impossivel criar a thread : receberSegmento\n");
+        exit(-1);
+    }
+
+    /* Inicia a thread threadReceberDatagramas */
+    tr = pthread_create(&threadReceberDatagramas, NULL, receberDatagramas, NULL);
+
+    if (tr) {
+        printf("ERRO: impossivel criar a thread : receberDatagramas\n");
         exit(-1);
     }
 
@@ -39,19 +47,27 @@ void *iniciarRede() {
         exit(-1);
     }
 
-    /* Inicia a thread receberSegmento */
-    te = pthread_create(&threadReceberSegmento, NULL, receberSegmento, NULL);
+    /* Inicia a thread threadEnviarDatagrama */
+    tes = pthread_create(&threadEnviarSegmento, NULL, enviarSegmento, NULL);
 
-    if (te) {
-        printf("ERRO: impossivel criar a thread : receberSegmento\n");
+    if (tes) {
+        printf("ERRO: impossivel criar a thread : enviarSegmento\n");
         exit(-1);
     }
 
-    /* Inicia a thread receberDatagramas */
-    tr = pthread_create(&threadReceberDatagramas, NULL, receberDatagramas, NULL);
+    /* Inicia a thread threadEnviarDatagrama */
+    ted = pthread_create(&threadEnviarDatagrama, NULL, enviarDatagrama, NULL);
 
-    if (tr) {
-        printf("ERRO: impossivel criar a thread : receberDatagramas\n");
+    if (ted) {
+        printf("ERRO: impossivel criar a thread : enviarDatagrama\n");
+        exit(-1);
+    }
+
+    /* Inicia a thread EnviarTabelaRotas */
+    tetr = pthread_create(&threadEnviarTabelaRotas, NULL, enviarTabelaRotas, NULL);
+
+    if (tetr) {
+        printf("ERRO: impossivel criar a thread : enviarTabelaRotas\n");
         exit(-1);
     }
 
@@ -60,11 +76,11 @@ void *iniciarRede() {
     pthread_join(threadReceberTabelaRotas, NULL);  
     pthread_join(threadReceberSegmento, NULL);
     pthread_join(threadReceberDatagramas, NULL);
+    pthread_join(threadEnviarDatagrama, NULL);
+    pthread_join(threadEnviarSegmento, NULL);
 }
 
 void *receberSegmento() {
-
-    int MTU = 0;
 
     while (1) {
 
@@ -73,15 +89,43 @@ void *receberSegmento() {
         /* Consumir buffer_trans_rede_env */
         pthread_mutex_lock(&mutex_trans_rede_env2);
 
-            montarDatagramaEnv(&datagrama_env);
+            retirarDatagramaTransRedeEnv(&datagrama_env);
 
         /* Consumir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_trans_rede_env1);
 
+        /* Produzir buffer_rede_rede_env */
+        pthread_mutex_lock(&mutex_rede_rede_env1);
+
+            colocarDatagramaBufferRedeRedeEnv(datagrama_env);
+
+        /* Produzir buffer_rede_rede_env */
+        pthread_mutex_unlock(&mutex_rede_rede_env2);
+    }
+}
+
+void *enviarDatagrama(){
+
+int MTU = 0;
+
+    while(TRUE){
+
+        struct datagrama datagrama_env;
+
+        /* Consumir buffer_rede_rede_env */
+        pthread_mutex_lock(&mutex_rede_rede_env2);
+
+            retirarDatagramaBufferRedeRedeEnv(&datagrama_env);
+
+        /* Consumir buffer_rede_rede_env */
+        pthread_mutex_unlock(&mutex_rede_rede_env1);
+
         /* Produzir buffer_trans_rede_env */
         pthread_mutex_lock(&mutex_rede_enlace_env1);
 
-            enviarDatagrama(datagrama_env);
+            colocarDatagramaBufferTransRedeEnv(datagrama_env);
+
+            printf("Enviei o datagrama\n");
 
         /* Produzir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_rede_enlace_env2);
@@ -96,8 +140,10 @@ void *receberSegmento() {
 
         /* É necessario fragmentar o datagrama? */
         if (MTU > 0)
-            fragmentarDatagrama(datagrama_env);
+            fragmentarDatagramaEnv(datagrama_env);
+    
     }
+
 }
 
 void *receberDatagramas() {
@@ -112,8 +158,8 @@ void *receberDatagramas() {
         /* Consumir buffer_rede_enlace_rcv */
         pthread_mutex_lock(&mutex_rede_enlace_rcv2);
 
-        /* Retira datagrama do buffer, retona se é necessario desfragmentar */
-            montarDatagramaRcv(&datagrama_rcv);
+        /* Retira datagrama do buffer */
+            retirarDatagramaBufferRedeEnlaceRcv(&datagrama_rcv);
 
         /* Consumir buffer_rede_enlace_rcv */
         pthread_mutex_unlock(&mutex_rede_enlace_rcv1);
@@ -123,40 +169,162 @@ void *receberDatagramas() {
 
             /* É necessario desfragmentar o datagrama? */
             if (datagrama_rcv.mf >= 0)
-                desfragmentarDatagrama(datagrama_rcv, &index);
+                desfragmentarDatagramaRcv(datagrama_rcv, &index);
 
             if (datagrama_rcv.mf == -1 || datagrama_rcv.mf == 0)
             {
-                /* Produzir buffer_trans_rede_rcv */
-                pthread_mutex_lock(&mutex_trans_rede_rcv1);
+                /* Produzir buffer_rede_rede_rcv */
+                pthread_mutex_lock(&mutex_rede_rede_rcv1);
 
                 /* É um datagrama unico? */
                 if (datagrama_rcv.mf == -1) {
 
-                    /* Coloca no buffer_trans_rede_rcv */
-                    enviarSegmento(datagrama_rcv);
+                    colocarDatagramaBufferRedeRedeRcv(datagrama_rcv);
 
-                    /* Foi o ultimo datagrama a ser framentado? */
+                /* Foi o ultimo datagrama a ser framentado? */
                 } else if (datagrama_rcv.mf == 0) {
 
-                    /* Coloca no buffer_trans_rede_rcv */
-                    enviarSegmento(buffers_fragmentacao[index]);
+                    colocarDatagramaBufferRedeRedeRcv(buffers_fragmentacao[index]);
                     resetarBuffer(&buffers_fragmentacao[index]);
-
                 }
 
-                /* Produzir buffer_trans_rede_rcv */
-                pthread_mutex_unlock(&mutex_trans_rede_rcv2);
+                /* Produzir buffer_rede_rede_rcv */
+                pthread_mutex_unlock(&mutex_rede_rede_rcv2);
             }
 
-            /* É um datagrama de roteamento? */
+        /* É um datagrama de roteamento? */
         } else if (datagrama_rcv.type == 2) {
-            // alimentarTabeladeRotas();
+
+            /* Produzir buffer_rede_rede_rcv */
+            pthread_mutex_lock(&mutex_rede_rede_rcv1);
+
+                colocarDatagramaBufferRedeRedeRcv(datagrama_rcv);
+
+            /* Produzir buffer_rede_rede_rcv */
+            pthread_mutex_unlock(&mutex_rede_rede_receberotas2);
+
         }
     }
 }
 
-void desfragmentarDatagrama(struct datagrama datagram, int *index) {
+void *enviarSegmento() {
+
+    while(TRUE){
+
+    struct datagrama datagrama_rcv;
+
+        /* Consumir buffer_rede_rede_rcv */
+        pthread_mutex_lock(&mutex_rede_rede_rcv2);
+
+            retirarDatagramaBufferRedeRedeRcv(&datagrama_rcv);
+
+        /* Consumir buffer_rede_rede_rcv */
+        pthread_mutex_unlock(&mutex_rede_rede_rcv1);
+
+        /* Produzir buffer_trans_rede_rcv */
+        pthread_mutex_lock(&mutex_trans_rede_rcv1);
+
+            colocarDatagramaBufferTransRedeRcv(datagrama_rcv);
+
+        /* Produzir buffer_trans_rede_rcv */
+        pthread_mutex_unlock(&mutex_trans_rede_rcv2);
+
+    }
+}
+
+void *enviarTabelaRotas(){
+
+    int i;
+
+   while(TRUE){
+
+        struct datagrama datagrama_env_inicial, datagrama_env;
+
+        if (iniciei == 1)
+        {
+
+            montarDatagramaTabelaRotas(&datagrama_env_inicial);
+
+            enviarTabelaRotasVizinhos(&datagrama_env_inicial);
+
+            iniciei = 0;
+
+        }
+
+        pthread_mutex_lock(&mutex_rede_rede_atualizei2);
+
+            montarDatagramaTabelaRotas(&datagrama_env);
+
+            printf("Montei datagrama para enviar tabela\n");
+
+        pthread_mutex_unlock(&mutex_rede_rede_atualizei1);
+
+        // Produzir buffer_rede_rede_env
+        pthread_mutex_lock(&mutex_rede_rede_env1);
+
+            enviarTabelaRotasVizinhos(&datagrama_env);
+
+        // Produzir buffer_rede_rede_env
+        pthread_mutex_unlock(&mutex_rede_rede_env2);
+   }
+}
+
+void *receberTabelaRotas(){
+
+   while(TRUE){
+
+    struct datagrama datagrama_rcv;
+
+        /* Consumir buffer_rede_rede_rcv */
+        pthread_mutex_lock(&mutex_rede_rede_receberotas2);
+
+            retirarDatagramaBufferRedeRedeRcv(&datagrama_rcv);
+
+        /* Consumir buffer_rede_rede_rcv */
+        pthread_mutex_unlock(&mutex_rede_rede_rcv1);
+
+        /* Travar e Desbloquear a threadEnviarTabelaRotas */
+        pthread_mutex_lock(&mutex_rede_rede_atualizei1);
+
+            //atualizarTabelaRotas(datagrama_rcv);
+            printf("Atualizei Tabela de Rotas\n");
+
+        pthread_mutex_unlock(&mutex_rede_rede_atualizei2);
+
+   }
+
+}
+
+void enviarTabelaRotasVizinhos(struct datagrama *datagram){
+    int i;
+
+    for (i = 0; i < 7; i++)
+    {
+        if (tabela_rotas[6][i] != -1)
+        {
+
+            // Produzir buffer_rede_rede_env
+            pthread_mutex_lock(&mutex_rede_rede_env1);
+
+                datagram->env_no = tabela_rotas[6][i];
+
+                printf("Enviei Tabela de Rotas para o '%d'\n",tabela_rotas[6][i]);
+
+                colocarDatagramaBufferRedeRedeEnv(*datagram);
+
+            // Produzir buffer_rede_rede_env
+            pthread_mutex_unlock(&mutex_rede_rede_env2);
+        }
+    }
+}
+
+void retirarDatagramaBufferRedeRedeRcv(struct datagrama *datagram){
+
+    memcpy(datagram, &buffer_rede_rede_rcv, sizeof (buffer_rede_rede_rcv));
+
+}
+
+void desfragmentarDatagramaRcv(struct datagrama datagram, int *index) {
     int i;
     int flag = -1;
     void *aux;
@@ -192,10 +360,10 @@ void desfragmentarDatagrama(struct datagrama datagram, int *index) {
     memcpy(aux, &datagram.data, datagram.tam_buffer);
 }
 
-void fragmentarDatagrama(struct datagrama datagram) {
+void fragmentarDatagramaEnv(struct datagrama datagram) {
 
     int i;
-    int tam_total_datagrama = sizeof (datagram.data) - (100 - datagram.tam_buffer); //Tamanho efetivo para dividir (desconsidera lixo)
+    int tam_total_datagrama = sizeof (datagram.data) - (TAM_MAX_BUFFER - datagram.tam_buffer); //Tamanho efetivo para dividir (desconsidera lixo)
     int qtde_divisao = 0; //Quantidade que será dividido os datagramas
     int tam_parte_final = 0; //Tamanho do ultimo datagrama
     int env_no = datagram.env_no; //Env_no
@@ -282,7 +450,7 @@ void fragmentarDatagrama(struct datagrama datagram) {
         pthread_mutex_lock(&mutex_rede_enlace_env1);
 
         /* Coloca Datagrama no buffer_trans_rede_env */
-        enviarDatagrama(datagrama_env_aux);
+        colocarDatagramaBufferTransRedeEnv(datagrama_env_aux);
 
         /* Produzir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_rede_enlace_env2);
@@ -298,7 +466,13 @@ void fragmentarDatagrama(struct datagrama datagram) {
     }
 }
 
-void enviarDatagrama(struct datagrama datagrama_env) {
+void colocarDatagramaBufferRedeRedeEnv(struct datagrama datagrama_env) {
+
+memcpy(&buffer_rede_rede_env, &datagrama_env, sizeof (datagrama_env));
+
+}
+
+void colocarDatagramaBufferTransRedeEnv(struct datagrama datagrama_env) {
 
     buffer_rede_enlace_env.tam_buffer = datagrama_env.tam_buffer;
     buffer_rede_enlace_env.env_no = datagrama_env.env_no;
@@ -307,13 +481,23 @@ void enviarDatagrama(struct datagrama datagrama_env) {
     memcpy(&buffer_rede_enlace_env.data, &datagrama_env, sizeof (datagrama_env));
 }
 
-void enviarSegmento(struct datagrama datagram) {
+void colocarDatagramaBufferRedeRedeRcv(struct datagrama datagram) {
 
-    buffer_trans_rede_rcv.tam_buffer = -9;
-    memcpy(&buffer_trans_rede_rcv.data, &datagram.data, sizeof (datagram.data));
+    memcpy(&buffer_rede_rede_rcv, &datagram, sizeof (datagram));
+
 }
 
-void montarDatagramaRcv(struct datagrama *datagram) {
+void colocarDatagramaBufferTransRedeRcv(struct datagrama datagram) {
+
+    int tam_buffer = datagram.tam_buffer;
+    int env_no = datagram.env_no;
+    int retorno = 1;
+
+    memcpy(&buffer_trans_rede_rcv.data, &datagram.data.segmento, sizeof (datagram.data.segmento));
+
+}
+
+void retirarDatagramaBufferRedeEnlaceRcv(struct datagrama *datagram) {
 
     if (buffer_rede_enlace_rcv.retorno != -1) {
 
@@ -328,7 +512,7 @@ void montarDatagramaRcv(struct datagrama *datagram) {
 
 }
 
-void montarDatagramaEnv(struct datagrama *datagram) {
+void retirarDatagramaTransRedeEnv(struct datagrama *datagram) {
 
     memcpy(&(datagram->data), &buffer_trans_rede_env.data, sizeof (buffer_trans_rede_env.data));
 
@@ -336,10 +520,17 @@ void montarDatagramaEnv(struct datagrama *datagram) {
     datagram->env_no = buffer_trans_rede_env.env_no;
     datagram->tam_buffer = buffer_trans_rede_env.tam_buffer;
     datagram->id = id;
-    datagram->offset = -1;
+    datagram->offset = 0;
     datagram->mf = -1;
 
+}
+
+void retirarDatagramaBufferRedeRedeEnv(struct datagrama *datagram) {
+
+    memcpy(datagram, &buffer_rede_rede_env, sizeof (buffer_rede_rede_env));
+    
     id++;
+
 }
 
 int retornoEnlace(struct datagrama datagrama_env) {
@@ -362,68 +553,30 @@ int retornoEnlace(struct datagrama datagrama_env) {
 }
 
 void resetarBuffer(struct datagrama *datagram){
+
     char aux[sizeof(datagram->data)] = "";
 
     datagram->tam_buffer = -1;
     datagram->offset = -1;
     datagram->id = -1;
-    datagram->tamanho_total = -1;
     datagram->mf = -1;
     datagram->type = -1;
     datagram->env_no = -1;
     datagram->retorno = -1;
     memcpy(&(datagram->data), aux, sizeof(datagram->data));
-}
-
-void *enviarTabelaRotas(){
 
 }
 
-void *receberTabelaRotas(){
+void montarDatagramaTabelaRotas(struct datagrama *datagram){
 
-    int i, atoi_result, s, from_address_size;
-    struct sockaddr_in from, server;
+    datagram->tam_buffer = 10;// MUDAR PARA SIZEOF(tabela_rotas)
+    datagram->offset = 0;
+    datagram->id = id;
+    datagram->mf = -1;
+    datagram->type = 2;
+    datagram->retorno = -1;
+    memcpy(&(datagram->data), &tabela_rotas, sizeof(tabela_rotas));
 
-    /*Cria socket */
-    if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("socket()");
-        exit(1);
-    }
-
-    /*Loop nos nós para achar o IP e Porta de seu nó */
-    for (i = 0; i < 6; ++i) {
-
-        /*Transforma char para int */
-        atoi_result = atoi(ligacao.nos[i][0]);
-
-        /*Achei o nó? */
-        if (atoi_result == file_info.num_no) {
-
-            /* seta o IP e Porta de seu nó no sockaddr_in 'server' */
-            server.sin_family = AF_INET;
-            server.sin_port = htons(5050); /* Porta do servidor */
-            server.sin_addr.s_addr = inet_addr(ligacao.nos[i][1]); /* Endereço IP do servidor */
-        }
-    }
-
-    /* Bind no IP e Porta */
-    if (bind(s, (struct sockaddr *) &server, sizeof (server)) < 0) {
-        perror("bind()");
-        exit(1);
-    }
-
-    while (TRUE) {
-
-        struct tabela_rotas routetable_rcv;
-
-        /* Fica esperando receber Frames */
-        from_address_size = sizeof (from);
-        if (recvfrom(s, &routetable_rcv, sizeof (routetable_rcv), 0, (struct sockaddr *) &from, &from_address_size) < 0) {
-            perror("recvfrom()");
-            exit(1);
-        }
-
-    }
 }
 
 void montarTabelaRotasInicial(){
@@ -433,24 +586,28 @@ void montarTabelaRotasInicial(){
   for (i = 0; i < 7; i++){
       for (j = 0; j < 7; j++)
           if (i == j)
-              routetable.tabela[i][j] = 0;
+              tabela_rotas[i][j] = 0;
           else
-              routetable.tabela[i][j] = INFINITO;
+              tabela_rotas[i][j] = INFINITO;
   }
 
   for (i = 0; i < 7; i++)
-    routetable.tabela[i][6] = -1;
+    tabela_rotas[i][6] = -1;
 
   for (j = 0; j < 7; j++)
-    routetable.tabela[6][j] = -1;
+    tabela_rotas[6][j] = -1;
 
-  routetable.tabela[file_info.num_no - 1][6] = file_info.num_no;
+  tabela_rotas[file_info.num_no - 1][6] = file_info.num_no;
 
   for (i = 0; i < 18; i++)
   {
       if(file_info.num_no == ligacao.enlaces[i][0]){
-         routetable.tabela[file_info.num_no - 1][ligacao.enlaces[i][1] - 1] = 1;
-         routetable.tabela[6][ligacao.enlaces[i][1] - 1] = ligacao.enlaces[i][1];
+         tabela_rotas[file_info.num_no - 1][ligacao.enlaces[i][1] - 1] = 1;
+         tabela_rotas[6][ligacao.enlaces[i][1] - 1] = ligacao.enlaces[i][1];
+      }
+      else if(file_info.num_no == ligacao.enlaces[i][1]){
+         tabela_rotas[file_info.num_no - 1][ligacao.enlaces[i][0] - 1] = 1;
+         tabela_rotas[6][ligacao.enlaces[i][0] - 1] = ligacao.enlaces[i][0];
       }
   }
 
@@ -459,7 +616,7 @@ void montarTabelaRotasInicial(){
   {
     for (j = 0; j < 7; j++)
     {
-      printf("routetable.tabela[%d][%d] = '%d'\n", i, j, routetable.tabela[i][j]);
+      printf("Tabela_rotas[%d][%d] = '%d'\n", i, j, tabela_rotas[i][j]);
     }
   }
 #endif

@@ -13,26 +13,38 @@
 #include <string.h>
 #include <pthread.h>     	/* para poder manipular threads */
 
+#define TAM_MAX_BUFFER 1400
+
 struct segmento {
     int tam_buffer;
-    char buffer[100];
+    char buffer[TAM_MAX_BUFFER];
+};
+
+struct tabela_rotas{
+    int tabela[7][7];
+};
+
+union segmento_tabela 
+        { 
+        struct segmento segmento;
+        struct tabela_rotas tabela_rotas;
+        };
+
+struct datagrama {
+    int tam_buffer;
+    int offset;
+    int id;
+    int mf;
+    int type;
+    int env_no;
+    int retorno;
+    union segmento_tabela data;
 };
 
 struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
     int retorno;
-    struct segmento data;
-};
-
-struct datagrama {
-    int tam_buffer;
-    int offset;
-    int id;
-    int tamanho_total;
-    int mf;
-    int type;
-    int env_no;
     struct segmento data;
 };
 
@@ -56,7 +68,11 @@ struct file file_info;
 struct ligacoes ligacao;
 
 pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
-pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3 ;
+pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3;
+pthread_mutex_t mutex_rede_rede_atualizei1, mutex_rede_rede_atualizei2;
+pthread_mutex_t mutex_rede_rede_receberotas2;
+pthread_mutex_t mutex_rede_rede_env1, mutex_rede_rede_env2,mutex_rede_rede_env3;
+pthread_mutex_t mutex_rede_rede_rcv1, mutex_rede_rede_rcv2,mutex_rede_rede_rcv3;
 pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2,mutex_trans_rede_env3;
 pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_rede_rcv3;
 

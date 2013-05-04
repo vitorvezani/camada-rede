@@ -36,6 +36,18 @@ int main(int argc, char const *argv[]) {
     pthread_mutex_init(&mutex_rede_enlace_rcv1, NULL);
     pthread_mutex_init(&mutex_rede_enlace_rcv2, NULL);
     pthread_mutex_init(&mutex_rede_enlace_rcv3, NULL);
+    /* Inicializar Mutex Rede->Rede Enviar */
+    pthread_mutex_init(&mutex_rede_rede_env1, NULL);
+    pthread_mutex_init(&mutex_rede_rede_env2, NULL);
+    pthread_mutex_init(&mutex_rede_rede_env3, NULL);
+    /* Inicializar Mutex Rede->Rede Receber */
+    pthread_mutex_init(&mutex_rede_rede_rcv1, NULL);
+    pthread_mutex_init(&mutex_rede_rede_rcv2, NULL);
+    pthread_mutex_init(&mutex_rede_rede_receberotas2, NULL);
+    pthread_mutex_init(&mutex_rede_rede_rcv3, NULL);
+    /* Inicializar Mutex Rede->Rede Atualizei */
+    pthread_mutex_init(&mutex_rede_rede_atualizei1, NULL);
+    pthread_mutex_init(&mutex_rede_rede_atualizei2, NULL);
     /* Inicializar Mutex Trans->Rede Enviar */
     pthread_mutex_init(&mutex_trans_rede_env1, NULL);
     pthread_mutex_init(&mutex_trans_rede_env2, NULL);
@@ -44,13 +56,14 @@ int main(int argc, char const *argv[]) {
     pthread_mutex_init(&mutex_trans_rede_rcv1, NULL);
     pthread_mutex_init(&mutex_trans_rede_rcv2, NULL);
     pthread_mutex_init(&mutex_trans_rede_rcv3, NULL);
-    /* Inicializar Mutex Interno Rede */
-    //pthread_mutex_init(&mutex_rede1, NULL);
-    //pthread_mutex_init(&mutex_rede2, NULL);
 
     //Inicialização de Mutex Consumidores
+    pthread_mutex_lock(&mutex_rede_rede_receberotas2);
+    pthread_mutex_lock(&mutex_rede_rede_atualizei2);
     pthread_mutex_lock(&mutex_rede_enlace_rcv2);
     pthread_mutex_lock(&mutex_rede_enlace_env2);
+    pthread_mutex_lock(&mutex_rede_rede_rcv2);
+    pthread_mutex_lock(&mutex_rede_rede_env2);
     pthread_mutex_lock(&mutex_trans_rede_env2);
     pthread_mutex_lock(&mutex_trans_rede_rcv2);
 
@@ -71,7 +84,7 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
 
-    usleep(10000);
+    usleep(15000);
 
     /* Inicia a thread iniciarRede */
     tr = pthread_create(&threadIniciaRede, NULL, iniciarRede, NULL);
@@ -81,7 +94,7 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
 
-    usleep(10000);
+    usleep(15000);
 
     /* Inicia a thread iniciarTransporte */
     ttr = pthread_create(&threadIniciaTransporte, NULL, iniciarTransporte, NULL);
@@ -104,6 +117,18 @@ int main(int argc, char const *argv[]) {
     pthread_mutex_destroy(&mutex_rede_enlace_rcv1);
     pthread_mutex_destroy(&mutex_rede_enlace_rcv2);
     pthread_mutex_destroy(&mutex_rede_enlace_rcv3);
+    /* Destroi o Mutex Rede->Rede Atualizei */
+    pthread_mutex_destroy(&mutex_rede_rede_atualizei1);
+    pthread_mutex_destroy(&mutex_rede_rede_atualizei2);
+    /* Destroi o Mutex Rede->Rede env */
+    pthread_mutex_destroy(&mutex_rede_rede_env1);
+    pthread_mutex_destroy(&mutex_rede_rede_env2);
+    pthread_mutex_destroy(&mutex_rede_rede_env3);
+    /* Destroi o Mutex Rede->Rede rcv */
+    pthread_mutex_destroy(&mutex_rede_rede_receberotas2);
+    pthread_mutex_destroy(&mutex_rede_rede_rcv1);
+    pthread_mutex_destroy(&mutex_rede_rede_rcv2);
+    pthread_mutex_destroy(&mutex_rede_rede_rcv3);
     /* Destroi o Mutex Trans->Rede env */
     pthread_mutex_destroy(&mutex_trans_rede_env1);
     pthread_mutex_destroy(&mutex_trans_rede_env2);

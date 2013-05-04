@@ -18,30 +18,36 @@
 #define MAX_BUFFERS_DESFRAG 5
 
 #define INFINITO 999999
+#define TAM_MAX_BUFFER 1400
 
 //#define DEBBUG_REDE_FRAGMENTAR
 //#define DEBBUG_REDE_DESFRAGMENTAR
-//#define DEBBUG_MONTAR_TABELA_INICIAL
+//#define DEBBUG_MONTAR_TABELA
 
 struct segmento {
     int tam_buffer;
-    char buffer[100];
+    char buffer[TAM_MAX_BUFFER];
 };
 
-struct buffer_trans_rede {
-    int tam_buffer;
-    int env_no;
-    int retorno;
-    struct segmento data;
-};
+union segmento_tabela 
+        { 
+        struct segmento segmento;
+        int tabela_rotas[7][7];
+        };
 
 struct datagrama {
     int tam_buffer;
     int offset;
     int id;
-    int tamanho_total;
     int mf;
     int type;
+    int env_no;
+    int retorno;
+    union segmento_tabela data;
+};
+
+struct buffer_trans_rede {
+    int tam_buffer;
     int env_no;
     int retorno;
     struct segmento data;
@@ -59,38 +65,61 @@ struct file {
     int num_no;
 };
 
-struct tabela_rotas{
-    int tabela[7][7];
-};
+// Variaveis Globais à Camada de Rede e Main
 
 extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
+
 extern struct file file_info;
+
 extern struct ligacoes ligacao;
 
 extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
-extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3 ;
+extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3;
+extern pthread_mutex_t mutex_rede_rede_atualizei1, mutex_rede_rede_atualizei2;
+extern pthread_mutex_t mutex_rede_rede_receberotas2;
+extern pthread_mutex_t mutex_rede_rede_env1, mutex_rede_rede_env2,mutex_rede_rede_env3;
+extern pthread_mutex_t mutex_rede_rede_rcv1, mutex_rede_rede_rcv2,mutex_rede_rede_rcv3;
 extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2,mutex_trans_rede_env3;
 extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_rede_rcv3;
 
-int id = 1; // Inicializa ID em 1
 
-struct datagrama buffers_fragmentacao[MAX_BUFFERS_DESFRAG];
-struct tabela_rotas routetable;
+//Variaveis Globais à camada de rede
+
+int id = 1; // Inicializa ID em 1
+int iniciei = 1; // Enviar tabela de rotas à vizinhos
+int tabela_rotas[7][7]; // Tabela de Rotas Interna do nó 
+
+struct datagrama buffers_fragmentacao[MAX_BUFFERS_DESFRAG]; // Buffer interno de fragmentos
+struct datagrama buffer_rede_rede_env, buffer_rede_rede_rcv; // Buffer interno entre threads
 
 //Threads
 void *enviarTabelaRotas();
 void *receberTabelaRotas();
 void *receberDatagramas();
 void *receberSegmento();
+void *enviarDatagrama();
+void *enviarSegmento();
 
 //Funcoes
-void fragmentarDatagrama(struct datagrama datagram);
-void enviarDatagrama(struct datagrama datagrama_env);
-void montarDatagramaRcv(struct datagrama *datagram);
+
+void fragmentarDatagramaEnv(struct datagrama datagram);
+void desfragmentarDatagramaRcv(struct datagrama datagram, int *index);
+
+void retirarDatagramaBufferRedeRedeRcv(struct datagrama *datagram);
+void retirarDatagramaBufferRedeRedeEnv(struct datagrama *datagram);
+void retirarDatagramaBufferRedeEnlaceRcv(struct datagrama *datagram);
+void retirarDatagramaTransRedeEnv(struct datagrama *datagram);
+
+void colocarDatagramaBufferRedeRedeEnv(struct datagrama datagrama);
+void colocarDatagramaBufferRedeRedeRcv(struct datagrama datagrama);
+void colocarDatagramaBufferTransRedeEnv(struct datagrama datagrama);
+void colocarDatagramaBufferTransRedeRcv(struct datagrama datagrama);
+
 int retornoEnlace(struct datagrama datagram);
-void enviarSegmento(struct datagrama datagram);
-void montarDatagramaEnv(struct datagrama *datagram);
+
 void resetarBuffer(struct datagrama *datagram);
-void desfragmentarDatagrama(struct datagrama datagram, int *index);
+
 void montarTabelaRotasInicial();
+void montarDatagramaTabelaRotas(struct datagrama *datagram);
+void enviarTabelaRotasVizinhos(struct datagrama *datagram);

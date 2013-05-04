@@ -21,20 +21,40 @@
 #define NOS             1
 #define ENLACES         2
 
+#define TAM_MAX_BUFFER 1400
+
 //#define DEBBUG_ENLACE
 
 struct segmento {
     int tam_buffer;
-    char buffer[100];
+    char buffer[TAM_MAX_BUFFER];
 };
 
+struct tabela_rotas{
+    int tabela[7][7];
+};
+
+union segmento_tabela 
+        { 
+        struct segmento segmento;
+        struct tabela_rotas tabela_rotas;
+        };
+
 struct datagrama {
-    int type;
     int tam_buffer;
     int offset;
     int id;
-    int tamanho_total;
     int mf;
+    int type;
+    int env_no;
+    int retorno;
+    union segmento_tabela data;
+};
+
+struct buffer_trans_rede {
+    int tam_buffer;
+    int env_no;
+    int retorno;
     struct segmento data;
 };
 
@@ -42,12 +62,6 @@ struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
     int retorno;
-    struct datagrama data;
-};
-
-struct frame {
-    int tam_buffer;
-    int ecc;
     struct datagrama data;
 };
 

@@ -76,7 +76,8 @@ void *enviarFrames() {
         /*Loop no ligacao enlaces */
         for (i = 0; i < 18; ++i) {
             /*Verificar se existe ligacao entre seu nó e o nó destino */
-            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1])) {
+            if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1]) ||
+                (ligacao.enlaces[i][1] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][0])) {
 
 #ifdef DEBBUG_ENLACE
                 printf("[ENLACE] Existe Ligacao nos [Enlaces]\n");
@@ -120,7 +121,7 @@ void *enviarFrames() {
 
                         /*Testa tam dos dados vs MTU do nó */
                         if (frame_env.tam_buffer > mtu) {
-                            printf("[ENLACE] Erro de MTU\n");
+                            printf("[ENLACE] ERRO de MTU Tamanho: '%d', MTU: '%d'\n",frame_env.tam_buffer,mtu);
                             buffer_rede_enlace_env.retorno = mtu;
                             flag = 2;
                             break;
@@ -147,6 +148,7 @@ void *enviarFrames() {
                         } else {
                             printf("[ENLACE] Dados enviados!\n");
                             flag = 1;
+                            break;
                         }
 
                     }
