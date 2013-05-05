@@ -16,23 +16,27 @@
 // Defines
 #define TAM_MAX_BUFFER 1400
 
+/* Estrutura da tabela de rotas */
 struct tabela_rotas{
     int destino;
     int custo;
     int saida;
 };
 
+/* Estrutura do segmento */
 struct segmento {
     int tam_buffer;
     char buffer[TAM_MAX_BUFFER];
 };
 
+/* uniao do segmento ou tabela de rotas */
 union segmento_tabela 
         { 
         struct segmento segmento;
         struct tabela_rotas tabela_rotas[6];
         };
 
+/* Estrutura do datagrama */
 struct datagrama {
     int tam_buffer;
     int offset;
@@ -45,6 +49,7 @@ struct datagrama {
     union segmento_tabela data;
 };
 
+/* Estrutura do buffer entre transporte e rede */
 struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
@@ -52,6 +57,7 @@ struct buffer_trans_rede {
     struct segmento data;
 };
 
+/* Estrutura do buffer entre rede e enlace */
 struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;

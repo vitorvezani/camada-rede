@@ -25,23 +25,27 @@
 
 //#define DEBBUG_ENLACE
 
+/* Estrutura da tabela de rotas */
 struct tabela_rotas{
     int destino;
     int custo;
     int saida;
 };
 
+/* Estrutura do segmento */
 struct segmento {
     int tam_buffer;
     char buffer[TAM_MAX_BUFFER];
 };
 
+/* Union entre segmento ou tabela de rotas */
 union segmento_tabela 
         { 
         struct segmento segmento;
         struct tabela_rotas tabela_rotas[6];
         };
 
+/* Estrutura do datagrama */
 struct datagrama {
     int tam_buffer;
     int offset;
@@ -54,6 +58,7 @@ struct datagrama {
     union segmento_tabela data;
 };
 
+/* Estrutura do buffer entre rede e enlace */
 struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
@@ -61,6 +66,7 @@ struct buffer_rede_enlace {
     struct datagrama data;
 };
 
+/* Estrutura do Frame */
 struct frame {
     int tam_buffer;
     int ecc;

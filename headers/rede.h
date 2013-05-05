@@ -25,6 +25,7 @@
 //#define DEBBUG_REDE_DESFRAGMENTAR
 //#define DEBBUG_MONTAR_TABELA
 
+/* Tabela de Rotas */
 struct tabela_rotas{
     int quem_enviou;
     int destino;
@@ -32,17 +33,20 @@ struct tabela_rotas{
     int saida;
 };
 
+/* Estrutura do Segmento */
 struct segmento {
     int tam_buffer;
     char buffer[TAM_MAX_BUFFER];
 };
 
+/* Uniao entre segmento e tabela de rotas */
 union segmento_tabela 
         { 
         struct segmento segmento;
         struct tabela_rotas tabela_rotas[6];
         };
 
+/* Estrutura do datagrama */
 struct datagrama {
     int tam_buffer;
     int offset;
@@ -55,6 +59,7 @@ struct datagrama {
     union segmento_tabela data;
 };
 
+/* Estrutura do buffer entre transporte e rede */
 struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
@@ -62,6 +67,7 @@ struct buffer_trans_rede {
     struct segmento data;
 };
 
+/* Estrutura do buffer entre rede e enlace */
 struct buffer_rede_enlace {
     int tam_buffer;
     int env_no;
@@ -69,6 +75,7 @@ struct buffer_rede_enlace {
     struct datagrama data;
 };
 
+/* Estrutura do arquivo */
 struct file {
     char file_name[20];
     int num_no;
@@ -79,9 +86,9 @@ struct file {
 extern struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 
-extern struct file file_info;
-int nos_vizinhos[6];
-extern struct ligacoes ligacao;
+extern struct file file_info;   //Info do arquivo
+int nos_vizinhos[6];            //Nós vizinhos
+extern struct ligacoes ligacao; // ligacao dos nós e enlaces
 
 extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
 extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3;
@@ -98,7 +105,7 @@ extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_
 int id = 1; // Inicializa ID em 1
 int iniciei = 1; // Enviar tabela de rotas à vizinhos
 struct tabela_rotas tabela_rotas[6]; // Tabela de Rotas Interna do nó 
-int saida = 0;
+int saida = 0; //Qual nó enviar
 
 struct datagrama buffers_fragmentacao[MAX_BUFFERS_DESFRAG]; // Buffer interno de fragmentos
 struct datagrama buffer_rede_rede_env, buffer_rede_rede_rcv; // Buffer interno entre threads

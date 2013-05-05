@@ -19,11 +19,13 @@
 
 #define TAM_MAX_BUFFER 1400
 
+/* Estrutura do Segmento */
 struct segmento {
     int tam_buffer;
     char buffer[TAM_MAX_BUFFER];
 };
 
+/* Estrutura do buffer entre a camada de transporte e rede*/
 struct buffer_trans_rede {
     int tam_buffer;
     int env_no;
@@ -31,6 +33,7 @@ struct buffer_trans_rede {
     struct segmento data;
 };
 
+/* Estrutura do datagrama */
 struct datagrama {
     int tam_buffer;
     int offset;
@@ -42,6 +45,7 @@ struct datagrama {
     struct segmento data;
 };
 
+/* Estrutura do arquivo */
 struct file {
     char file_name[20];
     int num_no;
