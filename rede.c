@@ -89,7 +89,7 @@ void *receberSegmento() {
         /* Consumir buffer_trans_rede_env */
         pthread_mutex_lock(&mutex_trans_rede_env2);
 
-            retirarDatagramaTransRedeEnv(&datagrama_env);
+            retirarDatagramaBufferTransRedeEnv(&datagrama_env);
 
         /* Consumir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_trans_rede_env1);
@@ -125,8 +125,6 @@ int MTU = 0;
 
             colocarDatagramaBufferTransRedeEnv(datagrama_env);
 
-            printf("Enviei o datagrama\n");
-
         /* Produzir buffer_trans_rede_env */
         pthread_mutex_unlock(&mutex_rede_enlace_env2);
 
@@ -139,10 +137,52 @@ int MTU = 0;
         pthread_mutex_unlock(&mutex_rede_enlace_env1);
 
         /* É necessario fragmentar o datagrama? */
+
+        if (MTU < 0)
+            MTU = enviarDatagramaNoNaoV(&datagrama_env);
+
         if (MTU > 0)
             fragmentarDatagramaEnv(datagrama_env);
-    
     }
+
+}
+
+int enviarDatagramaNoNaoV(struct datagrama *datagram){
+
+    int i, MTU = 0;
+
+    for (i = 0; i < 6; i++)
+    {
+        if (tabela_rotas[i].destino == datagram->env_no && tabela_rotas[i].saida != 0)
+        {
+        datagram->env_no = tabela_rotas[i].saida;
+
+        /* Produzir buffer_trans_rede_env */
+        pthread_mutex_lock(&mutex_rede_enlace_env1);
+
+            /* Coloca Datagrama no buffer_trans_rede_env */
+            colocarDatagramaBufferTransRedeEnv(*datagram);
+
+        /* Produzir buffer_trans_rede_env */
+        pthread_mutex_unlock(&mutex_rede_enlace_env2);
+
+        /* Consome resposta da camada de enlace */
+        pthread_mutex_lock(&mutex_rede_enlace_env1);
+
+            /* Testa retorno */
+            MTU = retornoEnlace(*datagram);
+
+            printf("Enviei para o nó: '%d'\n", datagram->env_no);
+
+        /* Consome resposta da camada de enlace */
+        pthread_mutex_unlock(&mutex_rede_enlace_env1);
+
+        break;
+
+        }
+    }
+
+    return MTU;
 
 }
 
@@ -164,45 +204,59 @@ void *receberDatagramas() {
         /* Consumir buffer_rede_enlace_rcv */
         pthread_mutex_unlock(&mutex_rede_enlace_rcv1);
 
-        /* É um datagrama IP? */
-        if (datagrama_rcv.type == 1) {
+        /* Datagrama é para mim? */
+        if(datagrama_rcv.env_no == file_info.num_no){
 
-            /* É necessario desfragmentar o datagrama? */
-            if (datagrama_rcv.mf >= 0)
-                desfragmentarDatagramaRcv(datagrama_rcv, &index);
+            /* É um datagrama IP? */
+            if (datagrama_rcv.type == 1) {
 
-            if (datagrama_rcv.mf == -1 || datagrama_rcv.mf == 0)
-            {
+                /* É necessario desfragmentar o datagrama? */
+                if (datagrama_rcv.mf >= 0)
+                    desfragmentarDatagramaRcv(datagrama_rcv, &index);
+
+                if (datagrama_rcv.mf == -1 || datagrama_rcv.mf == 0)
+                {
+                    /* Produzir buffer_rede_rede_rcv */
+                    pthread_mutex_lock(&mutex_rede_rede_rcv1);
+
+                    /* É um datagrama unico? */
+                    if (datagrama_rcv.mf == -1) {
+
+                        colocarDatagramaBufferRedeRedeRcv(datagrama_rcv);
+
+                    /* Foi o ultimo datagrama a ser framentado? */
+                    } else if (datagrama_rcv.mf == 0) {
+
+                        colocarDatagramaBufferRedeRedeRcv(buffers_fragmentacao[index]);
+                        resetarBuffer(&buffers_fragmentacao[index]);
+                    }
+
+                    /* Produzir buffer_rede_rede_rcv */
+                    pthread_mutex_unlock(&mutex_rede_rede_rcv2);
+                }
+
+            /* É um datagrama de roteamento? */
+            } else if (datagrama_rcv.type == 2) {
+
                 /* Produzir buffer_rede_rede_rcv */
                 pthread_mutex_lock(&mutex_rede_rede_rcv1);
 
-                /* É um datagrama unico? */
-                if (datagrama_rcv.mf == -1) {
-
                     colocarDatagramaBufferRedeRedeRcv(datagrama_rcv);
 
-                /* Foi o ultimo datagrama a ser framentado? */
-                } else if (datagrama_rcv.mf == 0) {
-
-                    colocarDatagramaBufferRedeRedeRcv(buffers_fragmentacao[index]);
-                    resetarBuffer(&buffers_fragmentacao[index]);
-                }
-
                 /* Produzir buffer_rede_rede_rcv */
-                pthread_mutex_unlock(&mutex_rede_rede_rcv2);
+                pthread_mutex_unlock(&mutex_rede_rede_receberotas2);
+
             }
+        }
+        else
+        {
+            /* Produzir buffer_rede_rede_env */
+            pthread_mutex_lock(&mutex_rede_rede_env1);
 
-        /* É um datagrama de roteamento? */
-        } else if (datagrama_rcv.type == 2) {
+                colocarDatagramaBufferRedeRedeEnv(datagrama_rcv);
 
-            /* Produzir buffer_rede_rede_rcv */
-            pthread_mutex_lock(&mutex_rede_rede_rcv1);
-
-                colocarDatagramaBufferRedeRedeRcv(datagrama_rcv);
-
-            /* Produzir buffer_rede_rede_rcv */
-            pthread_mutex_unlock(&mutex_rede_rede_receberotas2);
-
+            /* Produzir buffer_rede_rede_env */
+            pthread_mutex_unlock(&mutex_rede_rede_env2);
         }
     }
 }
@@ -255,17 +309,10 @@ void *enviarTabelaRotas(){
 
             montarDatagramaTabelaRotas(&datagrama_env);
 
-            printf("Montei datagrama para enviar tabela\n");
-
         pthread_mutex_unlock(&mutex_rede_rede_atualizei1);
-
-        // Produzir buffer_rede_rede_env
-        pthread_mutex_lock(&mutex_rede_rede_env1);
 
             enviarTabelaRotasVizinhos(&datagrama_env);
 
-        // Produzir buffer_rede_rede_env
-        pthread_mutex_unlock(&mutex_rede_rede_env2);
    }
 }
 
@@ -286,8 +333,7 @@ void *receberTabelaRotas(){
         /* Travar e Desbloquear a threadEnviarTabelaRotas */
         pthread_mutex_lock(&mutex_rede_rede_atualizei1);
 
-            //atualizarTabelaRotas(datagrama_rcv);
-            printf("Atualizei Tabela de Rotas\n");
+            atualizarTabelaRotas(datagrama_rcv);
 
         pthread_mutex_unlock(&mutex_rede_rede_atualizei2);
 
@@ -295,20 +341,43 @@ void *receberTabelaRotas(){
 
 }
 
-void enviarTabelaRotasVizinhos(struct datagrama *datagram){
+
+void atualizarTabelaRotas(struct datagrama datagram){
     int i;
 
-    for (i = 0; i < 7; i++)
-    {
-        if (tabela_rotas[6][i] != -1)
-        {
+    tabela_rotas[1].quem_enviou =  datagram.num_no;
 
+    for (i = 0; i < 6; ++i)
+    {
+        if (tabela_rotas[i].custo + 1 > datagram.data.tabela_rotas[i].custo)
+        {
+            tabela_rotas[i].custo = datagram.data.tabela_rotas[i].custo + 1;
+            tabela_rotas[i].saida = datagram.num_no;
+        }
+    }
+
+}
+
+void enviarTabelaRotasVizinhos(struct datagrama *datagram){
+
+    int i;
+
+    for (i = 0; i < 6; i++)
+    {
+
+        if( nos_vizinhos[i] != file_info.num_no            &&
+            nos_vizinhos[i] != -1                          &&
+            nos_vizinhos[i] != tabela_rotas[1].quem_enviou)
+        {
             // Produzir buffer_rede_rede_env
             pthread_mutex_lock(&mutex_rede_rede_env1);
 
-                datagram->env_no = tabela_rotas[6][i];
+                datagram->env_no = nos_vizinhos[i];
+                datagram->num_no = file_info.num_no;
 
-                printf("Enviei Tabela de Rotas para o '%d'\n",tabela_rotas[6][i]);
+                printf("Enviei Tabela de Rotas para o '%d'\n",nos_vizinhos[i]);
+
+                memcpy(&(datagram->data.tabela_rotas), &tabela_rotas, sizeof(tabela_rotas));
 
                 colocarDatagramaBufferRedeRedeEnv(*datagram);
 
@@ -489,10 +558,6 @@ void colocarDatagramaBufferRedeRedeRcv(struct datagrama datagram) {
 
 void colocarDatagramaBufferTransRedeRcv(struct datagrama datagram) {
 
-    int tam_buffer = datagram.tam_buffer;
-    int env_no = datagram.env_no;
-    int retorno = 1;
-
     memcpy(&buffer_trans_rede_rcv.data, &datagram.data.segmento, sizeof (datagram.data.segmento));
 
 }
@@ -512,7 +577,7 @@ void retirarDatagramaBufferRedeEnlaceRcv(struct datagrama *datagram) {
 
 }
 
-void retirarDatagramaTransRedeEnv(struct datagrama *datagram) {
+void retirarDatagramaBufferTransRedeEnv(struct datagrama *datagram) {
 
     memcpy(&(datagram->data), &buffer_trans_rede_env.data, sizeof (buffer_trans_rede_env.data));
 
@@ -541,6 +606,7 @@ int retornoEnlace(struct datagrama datagrama_env) {
             printf("[REDE - ENVIAR] OK\n\n");
         } else if (buffer_rede_enlace_env.retorno == -1) {
             printf("[REDE - ENVIAR] Não há ligacao do nó: '%d'!\n\n", buffer_rede_enlace_env.env_no);
+            return -1;
         } else if (buffer_rede_enlace_env.retorno > 0) {
             printf("[REDE - ENVIAR] MTU Excedido MAX '%d'\n", buffer_rede_enlace_env.retorno);
             return buffer_rede_enlace_env.retorno;
@@ -569,55 +635,80 @@ void resetarBuffer(struct datagrama *datagram){
 
 void montarDatagramaTabelaRotas(struct datagrama *datagram){
 
-    datagram->tam_buffer = 10;// MUDAR PARA SIZEOF(tabela_rotas)
+    datagram->tam_buffer = 10; // MUDAR PARA SIZEOF(tabela_rotas)
     datagram->offset = 0;
     datagram->id = id;
     datagram->mf = -1;
     datagram->type = 2;
     datagram->retorno = -1;
-    memcpy(&(datagram->data), &tabela_rotas, sizeof(tabela_rotas));
 
 }
 
 void montarTabelaRotasInicial(){
-  int i,j;
-  int atoiresult;
+  int i,j,k = 0;
 
-  for (i = 0; i < 7; i++){
-      for (j = 0; j < 7; j++)
-          if (i == j)
-              tabela_rotas[i][j] = 0;
-          else
-              tabela_rotas[i][j] = INFINITO;
+  tabela_rotas[1].quem_enviou = -1; 
+
+    for (i = 0; i < 6; ++i)
+    {
+        nos_vizinhos[i] = -1;
+    }
+
+  for (i = 0; i < 6; i++)
+  {
+    tabela_rotas[i].destino = atoi(ligacao.nos[i][0]);
+    if (file_info.num_no == atoi(ligacao.nos[i][0])){
+        tabela_rotas[i].custo = 0;
+        tabela_rotas[i].saida = atoi(ligacao.nos[i][0]);
+    }else{
+        tabela_rotas[i].custo = INFINITO;
+        tabela_rotas[i].saida = -1;
+    }
+
+    if (tabela_rotas[i].destino == -1)
+    {
+        tabela_rotas[i].custo = -1;
+    }
   }
-
-  for (i = 0; i < 7; i++)
-    tabela_rotas[i][6] = -1;
-
-  for (j = 0; j < 7; j++)
-    tabela_rotas[6][j] = -1;
-
-  tabela_rotas[file_info.num_no - 1][6] = file_info.num_no;
 
   for (i = 0; i < 18; i++)
   {
-      if(file_info.num_no == ligacao.enlaces[i][0]){
-         tabela_rotas[file_info.num_no - 1][ligacao.enlaces[i][1] - 1] = 1;
-         tabela_rotas[6][ligacao.enlaces[i][1] - 1] = ligacao.enlaces[i][1];
-      }
-      else if(file_info.num_no == ligacao.enlaces[i][1]){
-         tabela_rotas[file_info.num_no - 1][ligacao.enlaces[i][0] - 1] = 1;
-         tabela_rotas[6][ligacao.enlaces[i][0] - 1] = ligacao.enlaces[i][0];
-      }
+        if (ligacao.enlaces[i][0] == file_info.num_no)
+        {
+            for (j = 0; i < 6; j++)
+            {
+                if (ligacao.enlaces[i][1] == tabela_rotas[j].destino )
+                {
+                    tabela_rotas[j].custo = 1;
+                    tabela_rotas[j].saida = ligacao.enlaces[i][1];
+
+                    nos_vizinhos[k] = ligacao.enlaces[i][1];
+                    k++;
+                    break;
+                }
+            }
+        }else if (ligacao.enlaces[i][1] == file_info.num_no)
+        {
+            for (j = 0; i < 6; j++)
+            {
+                if (ligacao.enlaces[i][0] == tabela_rotas[j].destino )
+                {
+                    tabela_rotas[j].custo = 1;
+                    tabela_rotas[j].saida = ligacao.enlaces[i][0];
+
+                    nos_vizinhos[k] = ligacao.enlaces[i][0];
+                    k++;
+                    break;
+                }
+            }
+        }
   }
 
 #ifdef DEBBUG_MONTAR_TABELA
-  for (i = 0; i < 7; i++)
-  {
-    for (j = 0; j < 7; j++)
+for (i = 0; i < 6; ++i)
     {
-      printf("Tabela_rotas[%d][%d] = '%d'\n", i, j, tabela_rotas[i][j]);
+        printf("tabela_rotas[%d]].destino: '%d', tabela_rotas[%d]].custo: '%d', tabela_rotas[%d]].saida: '%d'\n", i,
+            tabela_rotas[i].destino, i, tabela_rotas[i].custo, i, tabela_rotas[i].saida );
     }
-  }
 #endif
 }

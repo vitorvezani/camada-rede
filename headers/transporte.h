@@ -13,6 +13,7 @@
 #include <string.h>
 #include <pthread.h>     	/* para poder manipular threads */
 
+// Defines
 #define TRUE 	1
 #define FALSE	0
 
@@ -46,12 +47,18 @@ struct file {
     int num_no;
 };
 
+// Variaveis Globais à Camada de Rede e Main
+
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 extern struct file file_info;
 
 extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans_rede_env3;
 extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
 
+// Threads
 void *enviarSegmentos();
 void *receberSegmentos();
+
+//Funcoes
+
 void montarSegmento(struct segmento *segment);

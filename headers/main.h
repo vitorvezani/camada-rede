@@ -13,21 +13,24 @@
 #include <string.h>
 #include <pthread.h>     	/* para poder manipular threads */
 
+// Defines
 #define TAM_MAX_BUFFER 1400
+
+struct tabela_rotas{
+    int destino;
+    int custo;
+    int saida;
+};
 
 struct segmento {
     int tam_buffer;
     char buffer[TAM_MAX_BUFFER];
 };
 
-struct tabela_rotas{
-    int tabela[7][7];
-};
-
 union segmento_tabela 
         { 
         struct segmento segmento;
-        struct tabela_rotas tabela_rotas;
+        struct tabela_rotas tabela_rotas[6];
         };
 
 struct datagrama {
@@ -37,6 +40,7 @@ struct datagrama {
     int mf;
     int type;
     int env_no;
+    int num_no;
     int retorno;
     union segmento_tabela data;
 };
@@ -60,6 +64,8 @@ struct file {
     int num_no;
 };
 
+// Variaveis Globais
+
 struct buffer_rede_enlace buffer_rede_enlace_env, buffer_rede_enlace_rcv;
 struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 
@@ -75,6 +81,8 @@ pthread_mutex_t mutex_rede_rede_env1, mutex_rede_rede_env2,mutex_rede_rede_env3;
 pthread_mutex_t mutex_rede_rede_rcv1, mutex_rede_rede_rcv2,mutex_rede_rede_rcv3;
 pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2,mutex_trans_rede_env3;
 pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_rede_rcv3;
+
+// Threads
 
 void *iniciarTransporte();
 void *iniciarEnlace();

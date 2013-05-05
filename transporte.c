@@ -94,9 +94,7 @@ void *enviarSegmentos() {
 
         pthread_mutex_unlock(&mutex_trans_rede_env1);
          */
-
     }
-
 }
 
 void *receberSegmentos() {
