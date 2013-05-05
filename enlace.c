@@ -74,10 +74,10 @@ void *enviarFrames() {
         pthread_mutex_lock(&mutex_rede_enlace_env2);
 
         /*Loop no ligacao enlaces */
-        for (i = 0; i < 18; ++i) {
+        for (i = 0; i < 18; i++) {
             /*Verificar se existe ligacao entre seu nó e o nó destino */
             if ((ligacao.enlaces[i][0] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][1]) ||
-                (ligacao.enlaces[i][1] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][0])) {
+                    (ligacao.enlaces[i][1] == file_info.num_no) && (buffer_rede_enlace_env.env_no == ligacao.enlaces[i][0])) {
 
 #ifdef DEBBUG_ENLACE
                 printf("[ENLACE] Existe Ligacao nos [Enlaces]\n");
@@ -87,7 +87,7 @@ void *enviarFrames() {
                 mtu = ligacao.enlaces[i][2];
 
                 /*Loop nos nós para encontrar IP e porta do nó destino */
-                for (i = 0; i < 6; ++i) {
+                for (i = 0; i < 6; i++) {
                     atoi_result = atoi(ligacao.nos[i][0]);
 
                     /*Verificar o IP e Porta do nó destino */
@@ -121,7 +121,7 @@ void *enviarFrames() {
 
                         /*Testa tam dos dados vs MTU do nó */
                         if (frame_env.tam_buffer > mtu) {
-                            printf("[ENLACE] ERRO de MTU Tamanho: '%d', MTU: '%d'\n",frame_env.tam_buffer,mtu);
+                            printf("[ENLACE] ERRO de MTU Tamanho: '%d', MTU: '%d'\n", frame_env.tam_buffer, mtu);
                             buffer_rede_enlace_env.retorno = mtu;
                             flag = 2;
                             break;
@@ -181,7 +181,7 @@ void *receberFrames() {
     }
 
     /*Loop nos nós para achar o IP e Porta de seu nó */
-    for (i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; i++) {
 
         /*Transforma char para int */
         atoi_result = atoi(ligacao.nos[i][0]);
@@ -217,10 +217,10 @@ void *receberFrames() {
             exit(1);
         }
 
-//#ifdef DEBBUG_ENLACE
+        //#ifdef DEBBUG_ENLACE
         printf("\n[ENLACE - SERVER] Frame Recebido! tam_buffer: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer,
                 frame_rcv.ecc, sizeof (frame_rcv.data), sizeof (frame_rcv));
-//#endif
+        //#endif
 
         /* Coloar Frame recebido no Buffer_rede_enlace_rcv */
         colocarDatagramaBuffer(frame_rcv);

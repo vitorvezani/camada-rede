@@ -98,6 +98,7 @@ extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2,mutex_trans_
 int id = 1; // Inicializa ID em 1
 int iniciei = 1; // Enviar tabela de rotas à vizinhos
 struct tabela_rotas tabela_rotas[6]; // Tabela de Rotas Interna do nó 
+int saida = 0;
 
 struct datagrama buffers_fragmentacao[MAX_BUFFERS_DESFRAG]; // Buffer interno de fragmentos
 struct datagrama buffer_rede_rede_env, buffer_rede_rede_rcv; // Buffer interno entre threads
@@ -114,7 +115,7 @@ void *enviarSegmento();
 void atualizarTabelaRotas(struct datagrama datagram);
 void fragmentarDatagramaEnv(struct datagrama datagram);
 void desfragmentarDatagramaRcv(struct datagrama datagram, int *index);
-int enviarDatagramaNoNaoV(struct datagrama *datagram);
+void enviarDatagramaNoNaoV(struct datagrama datagram);
 void retirarDatagramaBufferRedeRedeRcv(struct datagrama *datagram);
 void retirarDatagramaBufferRedeRedeEnv(struct datagrama *datagram);
 void retirarDatagramaBufferRedeEnlaceRcv(struct datagrama *datagram);

@@ -12,7 +12,7 @@
 #include "headers/arquivo.h"
 
 int main(int argc, char const *argv[]) {
-    int i,j;
+    int i, j;
     int te, tr, ttr;
     pthread_t threadIniciaEnlace, threadIniciaRede, threadIniciaTransporte;
 
@@ -67,7 +67,7 @@ int main(int argc, char const *argv[]) {
     pthread_mutex_lock(&mutex_trans_rede_env2);
     pthread_mutex_lock(&mutex_trans_rede_rcv2);
 
-        /* Inicializacao das estrutura ligacao */
+    /* Inicializacao das estrutura ligacao */
     for (i = 0; i < 18; ++i)
         for (j = 0; j < 3; ++j)
             ligacao.enlaces[i][j] = -1;
