@@ -78,7 +78,7 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
 
-    usleep(2000);
+    usleep(15000);
 
     /* Inicia a thread iniciarRede */
     tr = pthread_create(&threadIniciaRede, NULL, iniciarRede, NULL);
@@ -88,7 +88,7 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
 
-    usleep(2000);
+    usleep(15000);
 
     /* Inicia a thread iniciarTransporte */
     ttr = pthread_create(&threadIniciaTransporte, NULL, iniciarTransporte, NULL);

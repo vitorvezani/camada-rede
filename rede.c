@@ -75,6 +75,10 @@ void *iniciarRede() {
         exit(-1);
     }
 
+    /* Destroi Mutex */
+    pthread_mutex_destroy(&mutex_buffer_rede_env);
+    pthread_mutex_destroy(&mutex_buffer_rede_rcv);
+
     /* Espera as threads terminarem */
     pthread_join(threadEnviarTabelaRotas, NULL);
     pthread_join(threadReceberTabelaRotas, NULL);
