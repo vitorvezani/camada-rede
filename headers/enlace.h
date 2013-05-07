@@ -84,8 +84,8 @@ extern struct file file_info;
 
 extern struct ligacoes ligacao;
 
-extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2,mutex_rede_enlace_env3;
-extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2,mutex_rede_enlace_rcv3;
+extern pthread_mutex_t mutex_rede_enlace_env1, mutex_rede_enlace_env2;
+extern pthread_mutex_t mutex_rede_enlace_rcv1, mutex_rede_enlace_rcv2;
 
 // Threads
 void *enviarFrames();

@@ -82,7 +82,6 @@ void *enviarFrames() {
 #ifdef DEBBUG_ENLACE
                 printf("[ENLACE] Existe Ligacao nos [Enlaces]\n");
 #endif
-
                 /*seta MTU do enlace encontrado */
                 mtu = ligacao.enlaces[i][2];
 
@@ -146,7 +145,7 @@ void *enviarFrames() {
                             printf("[ENLACE] Dados não enviados!\n");
                             perror("sendto()");
                         } else {
-                            printf("\n[ENLACE] Dados enviados!\n");
+                            printf("[ENLACE] Dados enviados!\n");
                             flag = 1;
                             break;
                         }
@@ -217,10 +216,10 @@ void *receberFrames() {
             exit(1);
         }
 
-        //#ifdef DEBBUG_ENLACE
+#ifdef DEBBUG_ENLACE
         printf("\n[ENLACE - SERVER] Frame Recebido! tam_buffer: '%d', ecc: '%d', tam_datagrama: '%lu', tam_frame: '%lu'\n", frame_rcv.tam_buffer,
                 frame_rcv.ecc, sizeof (frame_rcv.data), sizeof (frame_rcv));
-        //#endif
+#endif
 
         /* Coloar Frame recebido no Buffer_rede_enlace_rcv */
         colocarDatagramaBuffer(frame_rcv);

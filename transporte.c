@@ -65,13 +65,10 @@ void *enviarSegmentos() {
             pch = strtok(NULL, "");
 
             strcpy(segmento_env.buffer, pch);
-
             //Seta tipo de msg, tamanho da msg e nó para enviar
             segmento_env.tam_buffer = strlen(segmento_env.buffer);
 
-            //Colocar no Buffer
-            buffer_trans_rede_env.tam_buffer = segmento_env.tam_buffer;
-            memcpy(&buffer_trans_rede_env.data, &segmento_env, sizeof (segmento_env));
+            colocarSegmentoBufferTransRedeEnv(segmento_env);
 
             //Destrava mutex de sincronismo
             pthread_mutex_unlock(&mutex_trans_rede_env2);
@@ -108,7 +105,7 @@ void *receberSegmentos() {
 
         if (buffer_trans_rede_rcv.tam_buffer != -1) {
 
-            montarSegmento(&segmento_rcv);
+            retirarSegmentoBufferTransRedeRcv(&segmento_rcv);
 
             printf("[TRANS - RECEBER] Tam_buffer: '%d' Bytes, Buffer: '%s'\n", segmento_rcv.tam_buffer,
                     segmento_rcv.buffer);
@@ -121,7 +118,15 @@ void *receberSegmentos() {
 
 }
 
-void montarSegmento(struct segmento *segment) {
+void colocarSegmentoBufferTransRedeEnv(struct segmento segment){
+
+    //Colocar no Buffer
+    buffer_trans_rede_env.tam_buffer = segment.tam_buffer;
+    memcpy(&buffer_trans_rede_env.data, &segment, sizeof (segment));
+
+}
+
+void retirarSegmentoBufferTransRedeRcv(struct segmento *segment) {
 
     segment->tam_buffer = buffer_trans_rede_rcv.data.tam_buffer;
     strcpy(segment->buffer, buffer_trans_rede_rcv.data.buffer);

@@ -56,8 +56,8 @@ struct file {
 extern struct buffer_trans_rede buffer_trans_rede_env, buffer_trans_rede_rcv;
 extern struct file file_info;
 
-extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2, mutex_trans_rede_env3;
-extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2, mutex_trans_rede_rcv3;
+extern pthread_mutex_t mutex_trans_rede_env1, mutex_trans_rede_env2;
+extern pthread_mutex_t mutex_trans_rede_rcv1, mutex_trans_rede_rcv2;
 
 // Threads
 void *enviarSegmentos();
@@ -65,4 +65,5 @@ void *receberSegmentos();
 
 //Funcoes
 
-void montarSegmento(struct segmento *segment);
+void colocarSegmentoBufferTransRedeEnv(struct segmento segment);
+void retirarSegmentoBufferTransRedeRcv(struct segmento *segment);
