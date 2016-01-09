@@ -306,9 +306,25 @@ void *enviarSegmento() {
     }
 }
 
+void *enviarTabelaRotasJob() {
+
+    while (TRUE){
+
+        struct datagrama datagrama_env;
+
+        sleep(rand() % 15 + 25);
+
+        montarDatagramaTabelaRotas(&datagrama_env);
+
+        enviarTabelaRotasVizinhos(&datagrama_env);
+
+    }
+}
+
 void *enviarTabelaRotas() {
 
-    int i;
+    int i, tetrj;
+    pthread_t threadEnviarTabelaRotasJob;
 
     while (TRUE) {
 
@@ -316,6 +332,16 @@ void *enviarTabelaRotas() {
 
         /* Executando pela primeira vez */
         if (iniciei == 1) {
+
+            /* Inicia a thread threadEnviarTabelaRotasJob */
+            tetrj = pthread_create(&threadEnviarTabelaRotasJob, NULL, enviarTabelaRotasJob, NULL);
+
+            if (tetrj) {
+            printf("ERRO: impossivel criar a thread : enviarTabelaRotasJob\n");
+            exit(-1);
+            }
+
+            pthread_detach(threadEnviarTabelaRotasJob);
 
             montarDatagramaTabelaRotas(&datagrama_env_inicial);
 
@@ -417,6 +443,7 @@ void enviarTabelaRotasVizinhos(struct datagrama *datagram) {
             pthread_mutex_unlock(&mutex_rede_rede_env2);
         }
     }
+tabela_rotas[1].quem_enviou = -1;
 }
 
 void retirarDatagramaBufferRedeRedeRcv(struct datagrama *datagram) {
